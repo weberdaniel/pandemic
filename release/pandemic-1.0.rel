@@ -1,0 +1,6 @@
+{release,
+ {"pandemic","1.0.0"},
+ {erts, "7.0.3"},
+ [{kernel, "4.0"},
+  {stdlib, "2.5"},
+  {pandemic, "1.0.0", permanent}]}.

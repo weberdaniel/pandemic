@@ -1,0 +1,6 @@
+todo: fix bug at shutdown
+todo: build a cascading pausing system: if a state is pausing, the message "pausing" is returned and the process switches to the mode "pausing" automatically.
+      only when all processes are in the pausing mode, they are set to "paused" by the world server.
+todo: correct the restart strategy to add connections
+todo: write a design document
+todo: infectedpopulation must be set in the config file
