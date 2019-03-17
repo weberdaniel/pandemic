@@ -54,7 +54,10 @@
          start_link/1, verify_admin/2, pause/2, resume/2, help/1,
          level/2, character/2 ]).
 
+-ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
+-endif.
+
 -include("records.hrl").
 
 -compile([debug_info]).
@@ -1027,6 +1030,8 @@ terminate(_,_)     -> {ok}.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+-ifdef(TEST).
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
 %% @doc try to read lines from "auth_testfile1" and verify the content
@@ -1034,7 +1039,7 @@ terminate(_,_)     -> {ok}.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 parse_file_test() ->
-  Result = read_lines("auth_testfile1"),
+  Result = read_lines("../auth_testfile1"),
   Result =:= #auth{ username   = "Daniel",
                     hashedpassword = "blabla",
                     admin          = true,
@@ -1048,7 +1053,7 @@ parse_file_test() ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 parse_file2_test() ->
-  Result = read_lines("auth_testfile2"),
+  Result = read_lines("../auth_testfile2"),
   Result =:= [#auth{ username = "username",
                         hashedpassword = "hello",
                         admin    = true,
@@ -1089,7 +1094,7 @@ write_authrecord_to_file_test() ->
       #auth{ username = "k2",
                    hashedpassword = "so4",
                    admin    = true  } ],
- write_file("output_test2", R).
+ write_file("../output_test2", R).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
@@ -1098,7 +1103,7 @@ write_authrecord_to_file_test() ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 try_start_and_stop_server_from_file_test() ->
-  {ok, PID} = auth:start("auth_testfile1"),
+  {ok, PID} = auth:start("../auth_testfile1"),
   auth:stop(PID).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1108,7 +1113,7 @@ try_start_and_stop_server_from_file_test() ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 try_login_test() ->
-  {ok, PID} = auth:start("auth_testfile3"),
+  {ok, PID} = auth:start("../auth_testfile3"),
   {ok, _} = auth:login(PID, "Daniel", "blabla"),
   auth:stop(PID).
 
@@ -1119,7 +1124,7 @@ try_login_test() ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 try_verify_test() ->
-  {ok, PID} = auth:start("auth_testfile3"),
+  {ok, PID} = auth:start("../auth_testfile3"),
   {ok, Token} = auth:login(PID, "Daniel", "blabla"),
   {verify_ok, "Daniel" } = auth:verify(PID, Token),
   auth:stop(PID).
@@ -1132,7 +1137,7 @@ try_verify_test() ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 try_verify_when_not_logged_in_test() ->
-  {ok, PID} = auth:start("auth_testfile3"),
+  {ok, PID} = auth:start("../auth_testfile3"),
   {verify_failed} = auth:verify(PID, "abcd"),
   auth:stop(PID).
 
@@ -1144,7 +1149,7 @@ try_verify_when_not_logged_in_test() ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 try_login_logout_verify_success_verify_failed_test() ->
-  {ok, PID} = auth:start("auth_testfile3"),
+  {ok, PID} = auth:start("../auth_testfile3"),
   {ok, Token} = auth:login(PID, "Daniel", "blabla"),
   {verify_ok, "Daniel" } = auth:verify(PID, Token),
   {ok} = auth:logout(PID, "Daniel", Token),
@@ -1158,10 +1163,12 @@ try_login_logout_verify_success_verify_failed_test() ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 try_verify_character_level_test() ->
-  {ok, PID}   = auth:start("auth_testfile3"),
+  {ok, PID}   = auth:start("../auth_testfile3"),
   {ok, Token} = auth:login(PID,"Daniel","blabla"),
   {verify_ok,3} = auth:level(PID,Token),
   auth:stop(PID).
+
+-endif.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

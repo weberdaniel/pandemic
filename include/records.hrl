@@ -82,7 +82,7 @@
                        %coordinate
                        coordinate ,   
                        %if the player has joined a specific location like a city
-                       location,      
+                       location :: atom(),      
 		       %current activity
                        activity :: atom(),      
                        %paused: true or false

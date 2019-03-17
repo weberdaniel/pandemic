@@ -50,7 +50,10 @@
 
 -include("records.hrl").
 -include_lib("xmerl/include/xmerl.hrl").
+
+-ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
+-endif.
 
 -compile([debug_info]).
 
@@ -1209,7 +1212,7 @@ build_xml_player_location(_State) when is_record(_State, playerstate) ->
      [
        #xmlElement{ name = name,
 		    content = 
-		    [ #xmlText{ value = _State#playerstate.location#location.name } ]
+		    [ #xmlText{ value = atom_to_list(_State#playerstate.location#location.name) } ]
 		  },
        #xmlElement{ name = latitude,
 		    content = 
@@ -1237,7 +1240,7 @@ build_xml_player_savegame(_State) when is_record(_State, playerstate) ->
      [
        #xmlElement{ name = name,
 		    content = 
-		    [ #xmlText{ value = _State#playerstate.name } ]
+		    [ #xmlText{ value = atom_to_list(_State#playerstate.name) } ]
 		  },
        #xmlElement{ name = character,
 		    content = 
@@ -1387,9 +1390,11 @@ build_xml_town_savegame(_State) when is_record(_State, townstate) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+-ifdef(TEST).
+
 build_xml_town_savegame_test() ->
   StateMunich = 
-  #townstate{ name            = blubber,
+  #townstate{ name            = "blubber",
               coordinate      = #coords
               { 
                 latitude  = 48.144,
@@ -1455,6 +1460,8 @@ build_xml_player_savegame_test() ->
   Export=xmerl:export_simple([XML],xmerl_xml),
   io:format(IOF,"~s~n",[lists:flatten(Export)])
 .
+
+-endif.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

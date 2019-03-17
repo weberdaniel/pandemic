@@ -35,7 +35,10 @@
          latitude/2, longitude/2, coordinates/2, location/2,
          stop/1, save/2, heal/2, paused/1, level/2  ]).  
 
+-ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
+-endif.
+
 -include("records.hrl").
 
 -compile([debug_info]).
@@ -633,10 +636,12 @@ terminate  (_,_)            -> {ok}.
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+-ifdef(TEST).
+
 register_player_test() ->
   Map = ets:new(world,[public,set]),
   {ok, _} = world:start(Map),
-  {ok, _} = auth:start("auth_testfile3"),
+  {ok, _} = auth:start("../auth_testfile3"),
   {ok,T}  = auth:login(auth,"Daniel","blabla"),
 
     StateNuremberg = 
@@ -683,7 +688,7 @@ register_player_test() ->
 unregister_player_test() ->
   Map = ets:new(world,[public,set]),
   {ok, _} = world:start(Map),
-  {ok, _} = auth:start("auth_testfile3"),
+  {ok, _} = auth:start("../auth_testfile3"),
   {ok,T}  = auth:login(auth,"Daniel","blabla"),
 
     StateNuremberg = 
@@ -725,6 +730,7 @@ unregister_player_test() ->
   auth:stop(auth),
   player:stop(daniel).
 
+-endif.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

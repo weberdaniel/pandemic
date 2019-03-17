@@ -36,7 +36,10 @@
          code_change/3, resume/2, latitude/1, longitude/1, 
          stop/1, save/2, addpassengers/3, passengers/1 ]).  
 
+-ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
+-endif.
+
 -include("records.hrl").
 
 -compile([debug_info]).
@@ -451,6 +454,8 @@ terminate  (_,_)            -> {ok}.
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+-ifdef(TEST).
+
 latitude_test() ->
   V = 
   #vehiclestate{ 
@@ -538,3 +543,5 @@ travelvehicle_test() ->
   {ok} = vehicle:addpassengers(PID, 100, 10),
   {300,10} = vehicle:passengers(PID),
   vehicle:stop(PID).
+
+-endif.

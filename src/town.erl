@@ -59,7 +59,10 @@
          disconnect/4, help/1, immigrate/2, save/2, population/1,
          infected/1, heal/2, paused/1]).
 
+-ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
+-endif.
+
 -include("records.hrl").
 
 -compile([debug_info]).
@@ -1036,6 +1039,8 @@ terminate(_,_)              -> {ok}.
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+-ifdef(TEST).
+
 begin_test() ->
   StateMunich = 
   #townstate{ name            = "blubber",
@@ -1066,7 +1071,7 @@ begin_test() ->
 retrieve_state_test() ->
   Map = ets:new(world,[public,set]),
   {ok, _} = world:start(Map),
-  {ok, _} = auth:start("auth_testfile3"),
+  {ok, _} = auth:start("../auth_testfile3"),
   {ok,Token}  = auth:login(auth,"Daniel","blabla"),
   StateMunich = 
   #townstate{ name            = "munich",
@@ -1115,7 +1120,7 @@ retrieve_state_test() ->
 add_player_test() ->
   Map = ets:new(world,[public,set]),
   {ok, _} = world:start(Map),
-  {ok, _} = auth:start("auth_testfile3"),
+  {ok, _} = auth:start("../auth_testfile3"),
   {ok,Token}  = auth:login(auth,"Daniel","blabla"),
   StateMunich = 
   #townstate{ name            = "munich",
@@ -1167,7 +1172,7 @@ add_player_test() ->
 add_and_remove_player_test() ->
   Map = ets:new(world,[public,set]),
   {ok, _} = world:start(Map),
-  {ok, _} = auth:start("auth_testfile3"),
+  {ok, _} = auth:start("../auth_testfile3"),
   {ok,Token}  = auth:login(auth,"Daniel","blabla"),
 
   StateMunich = 
@@ -1239,7 +1244,7 @@ add_and_remove_player_test() ->
 add_connection_test() ->
   Map = ets:new(world,[public,set]),
   {ok, _} = world:start(Map),
-  {ok, _} = auth:start("auth_testfile3"),
+  {ok, _} = auth:start("../auth_testfile3"),
   {ok,Token}  = auth:login(auth,"Daniel","blabla"),
   StateMunich = 
   #townstate{ name            = "munich",
@@ -1342,7 +1347,7 @@ decreasing_population_test() ->
 
   Map = ets:new(world,[public,set]),
   {ok, _} = world:start(Map),
-  {ok, _} = auth:start("auth_testfile3"),
+  {ok, _} = auth:start("../auth_testfile3"),
   {ok,Token}  = auth:login(auth,"Daniel","blabla"),
   StateMunich = 
   #townstate{ name            = "munich",
@@ -1379,6 +1384,8 @@ decreasing_population_test() ->
   auth:stop(auth)
 
   end}.
+
+-endif.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

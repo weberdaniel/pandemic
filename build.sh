@@ -1,1 +1,1 @@
-erl -make
+rebar compile

@@ -51,7 +51,10 @@
          add/2, rm/2, pos/2, distance/2, help/0, stop/1, pause/2,
          resume/2, processes/1, save/2  ]).
 
+-ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
+-endif.
+
 -include("records.hrl").
 
 -compile([debug_info]).
@@ -85,7 +88,7 @@ help( ) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 add( PID, {Lat,Long,Name,Type,PID2} ) 
-when is_number(Lat), is_number(Long), is_list(Name) ->
+when is_number(Lat), is_number(Long)  ->
   gen_server:call(PID, {register,Lat,Long,Name,Type,PID2}).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -268,7 +271,7 @@ init([State]) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 handle_call({register,_Lat,_Long,_Name,_Type,_PID},_From,_State) 
-when is_number(_Lat), is_number(_Long), is_list(_Name) -> 
+when is_number(_Lat), is_number(_Long)  -> 
  
   % check if the process is paused. if yes, return {paused}. Else insert the
   % new process to the ETS Table and establish an erlang:monitor between the
@@ -524,10 +527,12 @@ terminate(_,_)              -> {ok}.
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+-ifdef(TEST).
+
 add_pid_and_retrieve_test() ->
   Map = ets:new(world,[public,set]),
   {ok, _} = world:start(Map),
-  {ok, _} = auth:start("auth_testfile3"),
+  {ok, _} = auth:start("../auth_testfile3"),
   {ok,_}  = auth:login(auth,"Daniel","blabla"),
   world:add( world, {1,2,"hash",town,whereis(auth)} ),
   List = world:pos( world, {1,2} ),
@@ -547,7 +552,7 @@ add_pid_and_retrieve_test() ->
 pause_all_registered_processes_test() ->
   Map = ets:new(world,[public,set]),
   {ok, _} = world:start(Map),
-  {ok, _} = auth:start("auth_testfile3"),
+  {ok, _} = auth:start("../auth_testfile3"),
   {ok,K}  = auth:login(auth,"Daniel","blabla"),
 
     StateNuremberg = 
@@ -601,7 +606,7 @@ pause_all_registered_processes_test() ->
 try_save_all_processes_test() ->
   Map = ets:new(world,[public,set]),
   {ok, _} = world:start(Map),
-  {ok, _} = auth:start("auth_testfile3"),
+  {ok, _} = auth:start("../auth_testfile3"),
   {ok,K}  = auth:login(auth,"Daniel","blabla"),
 
     StateNuremberg = 
@@ -658,6 +663,7 @@ try_save_all_processes_test() ->
   auth:stop(auth),
   world:stop(world).
 
+-endif.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
