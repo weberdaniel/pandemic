@@ -4,3 +4,5 @@ todo: build a cascading pausing system: if a state is pausing, the message "paus
 todo: correct the restart strategy to add connections
 todo: write a design document
 todo: infectedpopulation must be set in the config file
+todo: rework everything
+todo: use exceptions

@@ -48,11 +48,30 @@
 
 -module(auth).
 -behaviour(gen_server).
--export([help/0, login/3, create_user/4, verify/2, logout/3, stop/1,
-         code_change/3, handle_call/3, handle_cast/2, handle_info/2,
-         init/1, terminate/2, start/0, start_link/0, start/1, 
-         start_link/1, verify_admin/2, pause/2, resume/2, help/1,
-         level/2, character/2 ]).
+-export([
+         help/0, 
+         login/3, 
+         create_user/4, 
+         verify/2, 
+         logout/3, 
+         stop/1,
+         code_change/3, 
+         handle_call/3, 
+         handle_cast/2, 
+         handle_info/2,
+         init/1, 
+         terminate/2, 
+         start/0, 
+         start_link/0, 
+         start/1, 
+         start_link/1, 
+         verify_admin/2, 
+         pause/2, 
+         resume/2, 
+         help/1,
+         level/2, 
+         character/2 
+       ]).
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
@@ -96,17 +115,22 @@ help() ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 help(login) ->
-  io:format(" login(PID, Username, Password): Login to the auth server. ~n"
-            "       Return {ok, AccessToken} or {fail} ~n");
+  io:format("  login(PID, Username, Password): ~n"
+	    "    Login to the auth server. Return {ok, AccessToken} or ~n"
+	    "    {fail}. ~n");
 help(create_user) ->
-  io:format(" To Be Done ~n");
+  io:format(" ");
 help(verify) ->
   io:format(" verify(PID, Username, Token): Verify that the username ~n");
+help(character) ->
+  io:format(" ");
+help(level) ->
+  io:format(" level(PID, Token): ");
 help(logout) ->
   io:format(" logout(PID, Username, Token): Logout and revoke the  ~n"
             "        AccessToken~n");
 help(verify_admin) ->
-  io:format(" logout(PID, Username, Token): invalidate Token ~n").
+  io:format(" ").
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
@@ -115,7 +139,8 @@ help(verify_admin) ->
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-login(_PID, _Username, _Password) ->
+login(_PID, _Username, _Password) when is_list(_Username), 
+				       is_list(_Password) ->
   gen_server:call(_PID, {login, _Username, 
                 lists:flatten(io_lib:format("~p",[erlang:phash2(_Password)]))}).
 
@@ -126,7 +151,7 @@ login(_PID, _Username, _Password) ->
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-pause(_PID, _AdminToken) ->
+pause(_PID, _AdminToken) when is_list(_AdminToken) ->
   gen_server:call(_PID, {pause, _AdminToken}).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -136,7 +161,7 @@ pause(_PID, _AdminToken) ->
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-level(_PID, _Token) ->
+level(_PID, _Token) when is_list(_Token) ->
   gen_server:call(_PID, {level,_Token}).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -146,7 +171,7 @@ level(_PID, _Token) ->
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-character(_PID, _Token) ->
+character(_PID, _Token) when is_list(_Token) ->
   gen_server:call(_PID, {character, _Token}).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -156,7 +181,7 @@ character(_PID, _Token) ->
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-resume(_PID, _AdminToken) ->
+resume(_PID, _AdminToken) when is_list(_AdminToken) ->
   gen_server:call(_PID, {resume, _AdminToken}).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -177,7 +202,7 @@ create_user(_PID, _Username, _Password, _AdminToken) ->
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-verify(_PID, _Token) ->
+verify(_PID, _Token) when is_list(_Token) ->
   gen_server:call(_PID, {verify, _Token}).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -187,7 +212,7 @@ verify(_PID, _Token) ->
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-verify_admin(_PID, _Token) ->
+verify_admin(_PID, _Token) when is_list(_Token) ->
   gen_server:call(_PID, {verify_admin, _Token}, 5000).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -197,7 +222,8 @@ verify_admin(_PID, _Token) ->
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-logout(_PID, _Username, _Token) ->
+logout(_PID, _Username, _Token) when is_list(_Username),
+				     is_list(_Token) ->
   gen_server:call(_PID, {logout, _Username, _Token}).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -227,8 +253,8 @@ stop(_PID) ->
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-character_access_token(_Token, _Records) 
-  when is_list(_Records), is_list(_Token) ->
+character_access_token(_Token, _Records) when is_list(_Records), 
+					      is_list(_Token) ->
 
   % call get_character(_Token,X) for each element X of _Records in order to
   % find the character type belonging to the token
@@ -1167,6 +1193,22 @@ try_verify_character_level_test() ->
   {ok, Token} = auth:login(PID,"Daniel","blabla"),
   {verify_ok,3} = auth:level(PID,Token),
   auth:stop(PID).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% @doc help test
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+help_test() ->
+  auth:help(),
+  auth:help(login),
+  auth:help(create_user),
+  auth:help(verify),
+  auth:help(character),
+  auth:help(level),
+  auth:help(logout),
+  auth:help(verify_admin).
 
 -endif.
 
