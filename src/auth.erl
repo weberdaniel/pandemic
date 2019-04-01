@@ -118,17 +118,19 @@ help(login) ->
   io:format("  login(PID, Username, Password): ~n"
 	    "    Login to the auth server. Return {ok, AccessToken} or ~n"
 	    "    {fail}. ~n");
+help(logout) ->
+  io:format(" logout(PID, Username, Token): Logout and revoke the  ~n"
+            "        AccessToken. Return {ok} or {fail}. ~n");
+help(verify) ->
+  io:format(" verify(PID, Username, Token): Verify that the username ~n"),
+  io:format("        belongs to the Token. Returns {verify_ok, Username}"),
+  io:format("~n        or {verify_failed}. ~n");
 help(create_user) ->
   io:format(" ");
-help(verify) ->
-  io:format(" verify(PID, Username, Token): Verify that the username ~n");
 help(character) ->
   io:format(" ");
 help(level) ->
   io:format(" level(PID, Token): ");
-help(logout) ->
-  io:format(" logout(PID, Username, Token): Logout and revoke the  ~n"
-            "        AccessToken~n");
 help(verify_admin) ->
   io:format(" ").
 
@@ -304,7 +306,7 @@ level_access_token(_Token, _Records) when is_list(_Records), is_list(_Token) ->
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
-%% @doc This function returns {ok,Username} if the _Token is valid. Else fail.
+%% @doc This function returns Username if the _Token is valid. Else fail.
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -320,7 +322,7 @@ verify_access_token(_Token, _Records) when is_list(_Records), is_list(_Token) ->
                       _Records 
 	            ),
 
-  % if an ok is in the list, then the access token belongs to one of  the
+  % if an ok is in the list, then the access token belongs to one of the
   % users and thus is correct. 
   
   KeySearch = lists:keysearch(ok,1,Result),
@@ -991,7 +993,8 @@ when is_list(_Token), is_record(_State,authserverstate) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 handle_call({login, _Username, _HashedPassword},_From,_State) 
-when is_record(_State,authserverstate), is_list(_Username), 
+when is_record(_State,authserverstate), 
+     is_list(_Username), 
      is_list(_HashedPassword) -> 
 
   % try to authentificate the user, that wants to login
@@ -1192,6 +1195,43 @@ try_verify_character_level_test() ->
   {ok, PID}   = auth:start("../auth_testfile3"),
   {ok, Token} = auth:login(PID,"Daniel","blabla"),
   {verify_ok,3} = auth:level(PID,Token),
+  auth:stop(PID).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% @doc try to verify the character of a certain player
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+try_verify_character_test() ->
+  {ok, PID}   = auth:start("../auth_testfile3"),
+  {ok, Token} = auth:login(PID,"Daniel","blabla"),
+  {verify_ok,medic} = auth:character(PID,Token),
+  auth:stop(PID).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% @doc try to fail the character test
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+try_fail_verify_character_test() ->
+  {ok, PID}   = auth:start("../auth_testfile3"),
+  {ok, Token} = auth:login(PID,"Daniel","blabla"),
+  {verify_failed} = auth:character(PID,"asdfasdf"),
+  auth:stop(PID).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% @doc try to pause the auth server and resume it
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+try_pause_auth_test() ->
+  {ok, PID}   = auth:start("../auth_testfile3"),
+  {ok, Token} = auth:login(PID,"Daniel","blabla"),
+  {paused} = auth:pause(PID,Token),
+  {resumed} = auth:resume(PID,Token),
   auth:stop(PID).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
