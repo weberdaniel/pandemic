@@ -1,0 +1,103 @@
+<?xml version="1.0"?>
+<!DOCTYPE pandemic SYSTEM "pandemic.dtd">
+
+<pandemic>
+
+<world>
+  <length_of_day_sec> 200 </length_of_day_sec>
+</world>
+
+<towns>
+
+<town>
+  <name>erlangen</name>
+  <coordinate> 
+    <latitude> 10.124 </latitude>
+    <longitude> 5.123 </longitude>
+  </coordinate>
+  <population> 300000 </population>
+  <connections>
+    <aircon> 
+      <from> erlangen </from>
+      <to> munich </to>
+      <distanceKm> 100.0 </distanceKm>
+    </aircon>
+    <roadcon> 
+      <from> erlangen </from>
+      <to> munich </to>
+      <distanceKm> 100.0 </distanceKm>
+    </roadcon>
+    <shipcon> 
+      <from> erlangen </from>
+      <to> munich </to>
+      <distanceKm> 100.0</distanceKm>
+    </shipcon>
+  </connections>
+  <birthrate> 0.1 </birthrate>
+  <infectionrate> 12.0 </infectionrate>
+  <infectedpopulation> 10 </infectedpopulation>
+  <lethality> 0.1 </lethality>
+  <travelrate> 3 </travelrate>
+  <airport> open </airport>
+  <roads> open </roads>
+  <harbor> open </harbor>
+</town>
+
+<town>
+  <name> munich </name>
+  <coordinate> 
+    <latitude> 33.1 </latitude>
+    <longitude> 99.33 </longitude>
+  </coordinate>
+  <population> 100000 </population>
+  <connections> 
+    <aircon> 
+      <from> munich </from>
+      <to> erlangen </to>
+      <distanceKm> 1000.0 </distanceKm>
+    </aircon>
+    <roadcon> 
+      <from> munich</from>
+      <to> erlangen </to>
+      <distanceKm> 2000.0 </distanceKm>
+    </roadcon>
+    <shipcon> 
+      <from> munich</from>
+      <to> erlangen</to>
+      <distanceKm> 3000.0 </distanceKm>
+    </shipcon>
+  </connections>
+  <birthrate> 0.0 </birthrate>
+  <infectionrate> 1.0 </infectionrate>
+  <infectedpopulation> 10 </infectedpopulation>
+  <lethality> 0.5 </lethality>
+  <travelrate> 113 </travelrate>
+  <airport> open </airport>
+  <roads> closed </roads>
+  <harbor> open  </harbor>
+</town>
+</towns>
+
+
+<players>
+  <player> 
+    <name> daniel </name>
+
+    <level> 3 </level>
+    <character> medic </character>
+
+    <coordinate> 
+      <latitude> 33.1 </latitude>
+      <longitude> 99.33 </longitude>
+    </coordinate>
+
+    <location> 
+      <name> munich </name>
+      <latitude> 33.1 </latitude>
+      <longitude> 99.33 </longitude>
+    </location>
+  </player>
+</players>
+
+
+</pandemic>

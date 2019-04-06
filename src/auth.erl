@@ -1230,8 +1230,8 @@ try_fail_verify_character_test() ->
 try_pause_auth_test() ->
   {ok, PID}   = auth:start("../auth_testfile3"),
   {ok, Token} = auth:login(PID,"Daniel","blabla"),
-  {paused} = auth:pause(PID,Token),
-  {resumed} = auth:resume(PID,Token),
+  {paused}    = auth:pause(PID,Token),
+  {resumed}   = auth:resume(PID,Token),
   auth:stop(PID).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
