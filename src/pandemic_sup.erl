@@ -34,11 +34,15 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 -module(pandemic_sup).
--export([start_link/0, init/1, start_link/1]).
+-export([start_link/1, init/1, start_link/2]).
 -behaviour(supervisor).
 
 -include("records.hrl").
 -include_lib("xmerl/include/xmerl.hrl").
+
+-ifdef(TEST).
+  -include_lib("eunit/include/eunit.hrl").
+-endif.
 
 -compile([debug_info]).
 
@@ -60,7 +64,7 @@
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-start_link() ->
+start_link(_AuthFile) when is_list(_AuthFile) ->
   supervisor:start_link(?MODULE, []).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -71,8 +75,8 @@ start_link() ->
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-start_link(_Filename) ->
-  supervisor:start_link(?MODULE, [_Filename]).
+start_link(_Filename,_AuthFile) when is_list(_Filename), is_list(_AuthFile) ->
+  supervisor:start_link(?MODULE, [_Filename,_AuthFile]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
@@ -82,7 +86,7 @@ start_link(_Filename) ->
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-init([_Filename]) ->
+init([_Filename,_AuthFile]) when is_list(_Filename), is_list(_AuthFile) ->
 
   MaxRestart = 5,
   MaxTime    = 60,
@@ -110,7 +114,6 @@ init([_Filename]) ->
                             xml_parser:create_player_state_from_xml_player_element(X)
                            end,
                            XmlPlayerElements), 
-
 
   % 
   % build the supervision tree, dependent on the TownStates and PlayerStates read
@@ -174,7 +177,7 @@ init([_Filename]) ->
      [
 
       { auth,
-        {sup_auth, start_link, []},
+        {sup_auth, start_link, [_AuthFile]},
         permanent,
         5000,
         worker,
@@ -271,6 +274,33 @@ init([]) ->
 %%   Helper Functions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  TESTS    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+-ifdef(TEST).
+
+start_test() ->
+  {ok, PID} = pandemic_sup:start_link("../config/test_game_config.xml",
+                                      "../auth_testfile3"),
+  unlink(PID),
+  exit(PID,shutdown),
+  Ref = monitor(process, PID),
+  receive
+      {'DOWN', Ref, process, PID, _Reason} ->
+          ok
+  after 1000 ->
+          error(exit_timeout)
+  end.
+
+-endif.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

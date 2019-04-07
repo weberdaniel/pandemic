@@ -37,7 +37,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 -module(sup_auth).
--export([start_link/0,init/1 ]).
+-export([start_link/1,init/1 ]).
 -behaviour(supervisor).
 
 -compile([debug_info]).
@@ -60,8 +60,8 @@
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-start_link() ->
-  supervisor:start_link({local,?MODULE},?MODULE,[]).
+start_link(Filename) when is_list(Filename) ->
+  supervisor:start_link({local,?MODULE},?MODULE,[Filename]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
@@ -73,7 +73,7 @@ start_link() ->
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-init([]) ->
+init([Filename]) ->
 
   % maximum times the server is started within MaxTime
 
@@ -86,7 +86,7 @@ init([]) ->
 
   {ok, {{one_for_one, MaxRestart, MaxTime},
         [{sup_auth,
-           {auth, start_link, ["auth_testfile3"]},
+           {auth, start_link, [Filename]},
            permanent,
            5000,
            worker,

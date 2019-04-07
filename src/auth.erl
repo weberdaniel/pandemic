@@ -70,11 +70,11 @@
          resume/2, 
          help/1,
          level/2, 
-         character/2 
-       ]).
+         character/2]).
 
 -ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
+  -include_lib("eunit/include/eunit.hrl").
+  -export([state/2]).
 -endif.
 
 -include("records.hrl").
@@ -155,6 +155,20 @@ login(_PID, _Username, _Password) when is_list(_Username),
 
 pause(_PID, _AdminToken) when is_list(_AdminToken) ->
   gen_server:call(_PID, {pause, _AdminToken}).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% @doc This interface function sends a synchronous {state, _AdminToken}
+%%      message to the Server located at _PID.
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+-ifdef(TEST).
+
+state(_PID, _AdminToken) when is_list(_AdminToken) ->
+  gen_server:call(_PID, {state, _AdminToken}).
+
+-endif.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
@@ -833,6 +847,25 @@ init([_Filename]) when is_list(_Filename) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+handle_call({state, _AdminToken},_From,_State) 
+when is_record(_State, authserverstate), is_list(_AdminToken) -> 
+  UsernameOfToken = verify_access_token(
+                       _AdminToken,_State#authserverstate.records),
+  IsAdmin = is_admin_token(_AdminToken, _State#authserverstate.records),
+  if 
+      %% if Username is not present OR no admin privileges are present,
+      %% return {verify_admin_failed}.
+
+      UsernameOfToken == fail; IsAdmin == false ->
+          {reply, {verify_admin_failed}, _State};
+
+      %% if Username exists AND admin privileges are present, pause the
+      %% state and return {paused}.
+
+      is_list(UsernameOfToken), IsAdmin == true ->
+          {reply, {_State}, _State}
+  end;
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
 %% @doc handle an incoming synchronous {pause, _AdminToken} message. Verify 
@@ -1069,7 +1102,7 @@ terminate(_,_)     -> {ok}.
 
 parse_file_test() ->
   Result = read_lines("../auth_testfile1"),
-  Result =:= #auth{ username   = "Daniel",
+  Result =:= #auth{ username       = "Daniel",
                     hashedpassword = "blabla",
                     admin          = true,
 		    level          = 1,
@@ -1083,16 +1116,16 @@ parse_file_test() ->
 
 parse_file2_test() ->
   Result = read_lines("../auth_testfile2"),
-  Result =:= [#auth{ username = "username",
+  Result =:= [#auth{ username          = "username",
                         hashedpassword = "hello",
-                        admin    = true,
-		        character = medic,
-		        level = 2  },
-              #auth{ username = "vuffi",
+                        admin          = true,
+		        character      = medic,
+		        level          = 2  },
+              #auth{ username          = "vuffi",
                         hashedpassword = "raa",
-                        admin    = true,
-		        character = politic,
-		        level = 1  }].
+                        admin          = true,
+		        character      = politic,
+		        level          = 1  }].
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
@@ -1102,11 +1135,11 @@ parse_file2_test() ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 authrecord_to_string_test() ->
- R = #auth{ username = "vuffi",
+ R = #auth{ username       = "vuffi",
             hashedpassword = "raa",
-            level = 3,
-	    character = medic,
-            admin    = true  },
+            level          = 3,
+	    character      = medic,
+            admin          = true  },
   Result = authrecord_to_string(R),
   Result =:= "vuffi,raa,medic,3,true".
 
@@ -1117,12 +1150,12 @@ authrecord_to_string_test() ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 write_authrecord_to_file_test() ->
- R = [#auth{ username = "r2",
+ R = [#auth{ username             = "r2",
                    hashedpassword = "d2",
-                   admin    = true  },
-      #auth{ username = "k2",
+                   admin          = true  },
+      #auth{ username             = "k2",
                    hashedpassword = "so4",
-                   admin    = true  } ],
+                   admin          = true  }],
  write_file("../output_test2", R).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1143,7 +1176,7 @@ try_start_and_stop_server_from_file_test() ->
 
 try_login_test() ->
   {ok, PID} = auth:start("../auth_testfile3"),
-  {ok, _} = auth:login(PID, "Daniel", "blabla"),
+  {ok, _}   = auth:login(PID, "Daniel", "blabla"),
   auth:stop(PID).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1217,7 +1250,7 @@ try_verify_character_test() ->
 
 try_fail_verify_character_test() ->
   {ok, PID}   = auth:start("../auth_testfile3"),
-  {ok, Token} = auth:login(PID,"Daniel","blabla"),
+  {ok, _} = auth:login(PID,"Daniel","blabla"),
   {verify_failed} = auth:character(PID,"asdfasdf"),
   auth:stop(PID).
 
@@ -1231,8 +1264,10 @@ try_pause_auth_test() ->
   {ok, PID}   = auth:start("../auth_testfile3"),
   {ok, Token} = auth:login(PID,"Daniel","blabla"),
   {paused}    = auth:pause(PID,Token),
+  {State}     = auth:state(PID,Token),
   {resumed}   = auth:resume(PID,Token),
-  auth:stop(PID).
+  auth:stop(PID),
+  State#authserverstate.paused =:= paused.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
