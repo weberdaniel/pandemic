@@ -363,16 +363,24 @@ init([_Playerstate]) when is_record(_Playerstate, playerstate) ->
 
 handle_call({heal, _Token},_From,_State) 
 when is_record(_State, playerstate), is_list(_Token) ->
-
   PlayerLocation = _State#playerstate.location,
-  LocationName   = PlayerLocation#location.name,
-  LocationPID    = whereis(LocationName),
-
-  case is_paused(_State) of
-    true  -> {reply, {paused}, _State};
-    false -> Reply = town:heal(LocationPID, _Token),
-	     {reply, Reply, _State}
-  end;
+  case is_record(PlayerLocation, location) of
+    true -> 
+      LocationName   = PlayerLocation#location.name,
+      LocationPID    = whereis(LocationName),
+      case is_process_alive(LocationPID) of
+        true ->
+          case is_paused(_State) of
+            true  -> {reply, {paused}, _State};
+            false -> Reply = town:heal(LocationPID, _Token),
+	             {reply, Reply, _State}
+          end;
+	         %TODO: eventuelly reset internal state if this happens.
+	         %      obviously location is wrong (??)
+        false -> {reply, {not_in_town}, _State}
+      end;
+    false -> {reply, {not_in_town}, _State}
+      end;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
@@ -729,6 +737,109 @@ unregister_player_test() ->
   town:stop(nuremberg),
   auth:stop(auth),
   player:stop(daniel).
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% @doc Test to call the help
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+help_test() ->
+  player:help().
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% @doc Test to check the paused state
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+pause_and_resume_test() ->
+  Map = ets:new(world,[public,set]),
+  {ok, _} = world:start(Map),
+  {ok, _} = auth:start("../auth_testfile3"),
+  {ok,T}  = auth:login(auth,"Daniel","blabla"),
+    StateNuremberg = 
+    #townstate{ name          = "nuremberg",
+                coordinate    = #coords
+                { 
+                  latitude  = 49.461,
+                  longitude = 11.062
+                },
+                population    = 1300000,
+                connections   = [],
+                birthrate     = 20.0,
+                infectionrate = 5.0,
+                lethality     = 30.0,
+                travelrate    = 400,
+                airport       = open,
+                roads         = open,
+                players       = []
+              },
+  PlayerState =
+  #playerstate{ name = daniel, 
+                coordinate = #coords{ latitude = 49.461, 
+                             longitude = 11.062 },
+                location = undefined,
+                activity = undefined,
+                paused = false
+  },
+  {ok,TownPid}         = town:start(StateNuremberg),
+  {ok, PlayerPid}        = player:start(PlayerState),
+  Result = player:pause(PlayerPid, T),
+  Result =:= {paused},
+  Result2 = player:resume(PlayerPid, T),
+  Result2 =:= {resumed},
+  world:stop(world),
+  town:stop(nuremberg),
+  auth:stop(auth),
+  player:stop(daniel).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% @doc Test to check the paused state
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+wrong_character_heal_test() ->
+  Map = ets:new(world,[public,set]),
+  {ok, _} = world:start(Map),
+  {ok, _} = auth:start("../auth_testfile3"),
+  {ok,T}  = auth:login(auth,"Daniel","blabla"),
+    StateNuremberg = 
+    #townstate{ name          = "nuremberg",
+                coordinate    = #coords
+                { 
+                  latitude  = 49.461,
+                  longitude = 11.062
+                },
+                population    = 1300000,
+                connections   = [],
+                birthrate     = 20.0,
+                infectionrate = 5.0,
+                lethality     = 30.0,
+                travelrate    = 400,
+                airport       = open,
+                roads         = open,
+                players       = []
+              },
+  PlayerState =
+  #playerstate{ name = daniel, 
+                coordinate = #coords{ latitude = 49.461, 
+                             longitude = 11.062 },
+                location = undefined,
+                activity = undefined,
+                paused = false
+  },
+  {ok,TownPid}         = town:start(StateNuremberg),
+  {ok, PlayerPid}        = player:start(PlayerState),
+  Result = player:heal(PlayerPid, T),
+  Result =:= {wrong_character},
+  world:stop(world),
+  town:stop(nuremberg),
+  auth:stop(auth),
+  player:stop(daniel).
+
 
 -endif.
 
