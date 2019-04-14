@@ -1335,6 +1335,42 @@ add_connection_test() ->
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
+%% @doc Test the infected interface
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+infected_test() ->
+  Map = ets:new(world,[public,set]),
+  {ok, _} = world:start(Map),
+  {ok, _} = auth:start("../auth_testfile3"),
+  {ok,Token}  = auth:login(auth,"Daniel","blabla"),
+  StateMunich = 
+  #townstate{ name            = "munich",
+              coordinate      = #coords
+              { 
+                latitude  = 48.144,
+                longitude = 11.558
+              },
+              population      = 1300000,
+              birthrate       = 20.0,
+              infectionrate   = 5.0,
+              lethality       = 30.0,
+              infectedpopulation = 1234,
+              travelrate      = 400,
+              connections     = [],
+              airport         = open,
+              roads           = open,
+              paused          = false,
+              players         = []
+            },
+  {ok,_}         = town:start(StateMunich),
+  {1000} = town:infected(munich),
+  world:stop(world),
+  town:stop(munich),
+  auth:stop(auth).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
 %% @doc This is a test generator function. It changes the default of 5 seconds
 %% test timeout to 40 seconds
 %%
