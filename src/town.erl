@@ -324,15 +324,20 @@ is_paused(_State) when is_record(_State,townstate) ->
 
 has_healed(_Token,_State) when is_record(_State,townstate), is_list(_Token) ->
   Heals = _State#townstate.healsofplayers,
-  R = lists:map( fun(X) ->
+  case Heals of
+    undefined -> false;
+    undef     -> false;
+    []        -> false;
+    _         -> R = lists:map( 
+		 fun(X) ->
                    case {_Token} =:= X of
                      true  -> ok;
                      false -> fail
                    end
                  end,
-                   Heals
-               ),
-  lists:member(ok, R).
+                   Heals),
+                 lists:member(ok, R)
+  end.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
@@ -616,7 +621,13 @@ when is_record(_OldState, townstate) ->
                            true -> {reply, {no_more_heal}, _OldState};
 		           false -> Infected = 
 				      _OldState#townstate.infectedpopulation,
-			            Heals = _OldState#townstate.healsofplayers,
+				    %% this is important otherwise the code could crash
+				    %% when the healsofplayers is undefined
+			            Heals = case _OldState#townstate.healsofplayers of
+					      undef -> [];
+                                              undefined -> [];
+		                              A -> A
+				            end,
 			            NewHeal = lists:flatten([
 	                                 lists:append(Heals,{_Token})]),
                                     NewInfected = Infected - LevelNum,
@@ -1340,9 +1351,9 @@ add_connection_test() ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 infected_test() ->
-  Map = ets:new(world,[public,set]),
-  {ok, _} = world:start(Map),
-  {ok, _} = auth:start("../auth_testfile3"),
+  Map         = ets:new(world,[public,set]),
+  {ok, _}     = world:start(Map),
+  {ok, _}     = auth:start("../auth_testfile3"),
   {ok,Token}  = auth:login(auth,"Daniel","blabla"),
   StateMunich = 
   #townstate{ name            = "munich",
@@ -1364,10 +1375,67 @@ infected_test() ->
               players         = []
             },
   {ok,_}         = town:start(StateMunich),
-  {1000} = town:infected(munich),
+  {1234} = town:infected(munich),
   world:stop(world),
   town:stop(munich),
   auth:stop(auth).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% @doc test if the help function works
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+help_test() ->
+  town:help(),
+  town:help(longitude).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% @doc test if it is possible to heal
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+heal_test() ->
+  Map = ets:new(world,[public,set]),
+  {ok, _} = world:start(Map),
+  {ok, _} = auth:start("../auth_testfile3"),
+  {ok,Token}  = auth:login(auth,"Daniel","blabla"),
+
+  % player must be at the same position as town
+  PlayerState = #playerstate{ name = daniel, 
+                coordinate = #coords{ latitude = 48.144, longitude = 11.558 },
+                location = undefined,
+                activity = undefined,
+                paused = false},
+  StateMunich = 
+  #townstate{ name            = "munich",
+              coordinate      = #coords
+              { 
+                latitude  = 48.144,
+                longitude = 11.558
+              },
+              population      = 1300000,
+              birthrate       = 20.0,
+              infectionrate   = 5.0,
+              lethality       = 30.0,
+              infectedpopulation = 1234,
+              travelrate      = 400,
+              connections     = [],
+              airport         = open,
+              roads           = open,
+              paused          = false,
+              players         = []
+            },
+  {ok,_}         = town:start(StateMunich),
+  {ok, PlayerPid}        = player:start(PlayerState),
+  {ok}           = player:join( daniel, munich, town, Token ),
+
+  Result = player:heal(PlayerPid, Token),
+  world:stop(world),
+  town:stop(munich),
+  auth:stop(auth),
+  player:stop(daniel).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%

@@ -396,7 +396,7 @@ when is_record(_State, playerstate), is_list(_Token) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 handle_call({join,town,_PID,_Token},_From,_State) 
-when is_record(_State,playerstate), is_atom(_PID) -> 
+when is_record(_State, playerstate), is_atom(_PID) -> 
 
   case is_paused(_State) of
     true -> {reply, {paused}, _State};
@@ -784,12 +784,12 @@ pause_and_resume_test() ->
                 activity = undefined,
                 paused = false
   },
-  {ok,TownPid}         = town:start(StateNuremberg),
+  {ok,_}         = town:start(StateNuremberg),
   {ok, PlayerPid}        = player:start(PlayerState),
   Result = player:pause(PlayerPid, T),
-  Result =:= {paused},
+  ?assert( Result =:= {paused} ),
   Result2 = player:resume(PlayerPid, T),
-  Result2 =:= {resumed},
+  ?assert( Result2 =:= {resumed} ),
   world:stop(world),
   town:stop(nuremberg),
   auth:stop(auth),
@@ -801,7 +801,7 @@ pause_and_resume_test() ->
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-wrong_character_heal_test() ->
+player_not_in_town_heal_test() ->
   Map = ets:new(world,[public,set]),
   {ok, _} = world:start(Map),
   {ok, _} = auth:start("../auth_testfile3"),
@@ -831,10 +831,10 @@ wrong_character_heal_test() ->
                 activity = undefined,
                 paused = false
   },
-  {ok,TownPid}         = town:start(StateNuremberg),
-  {ok, PlayerPid}        = player:start(PlayerState),
+  {ok,_}         = town:start(StateNuremberg),
+  {ok, PlayerPid}       = player:start(PlayerState),
   Result = player:heal(PlayerPid, T),
-  Result =:= {wrong_character},
+  ?assert( Result =:= {not_in_town} ),
   world:stop(world),
   town:stop(nuremberg),
   auth:stop(auth),
