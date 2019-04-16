@@ -549,6 +549,9 @@ add_pid_and_retrieve_test() ->
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+help_test() ->
+  world:help().
+
 pause_all_registered_processes_test() ->
   Map = ets:new(world,[public,set]),
   {ok, _} = world:start(Map),
