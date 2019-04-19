@@ -840,6 +840,55 @@ player_not_in_town_heal_test() ->
   auth:stop(auth),
   player:stop(daniel).
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% @doc Test to check the paused state
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+latitude_test() ->
+  Map = ets:new(world,[public,set]),
+  {ok, _} = world:start(Map),
+  {ok, _} = auth:start("../auth_testfile3"),
+  {ok,T}  = auth:login(auth,"Daniel","blabla"),
+  PlayerState =
+  #playerstate{ name = daniel, 
+                coordinate = #coords{ latitude = 49.461, 
+                             longitude = 11.062 },
+                location = undefined,
+                activity = undefined,
+                paused = false },
+  {ok, PlayerPid}       = player:start(PlayerState),
+  {Value} = player:latitude(PlayerPid,T),
+  ?assert( Value =:= 49.461 ),
+  world:stop(world),
+  auth:stop(auth),
+  player:stop(daniel).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% @doc Test to check the paused state
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+longitude_test() ->
+  Map = ets:new(world,[public,set]),
+  {ok, _} = world:start(Map),
+  {ok, _} = auth:start("../auth_testfile3"),
+  {ok,T}  = auth:login(auth,"Daniel","blabla"),
+  PlayerState =
+  #playerstate{ name = daniel, 
+                coordinate = #coords{ latitude = 49.461, 
+                             longitude = 11.062 },
+                location = undefined,
+                activity = undefined,
+                paused = false },
+  {ok, PlayerPid}       = player:start(PlayerState),
+  {Value} = player:longitude(PlayerPid,T),
+  ?assert( Value =:= 11.062 ),
+  world:stop(world),
+  auth:stop(auth),
+  player:stop(daniel).
 
 -endif.
 
