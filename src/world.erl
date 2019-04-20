@@ -230,6 +230,7 @@ is_paused(_State) when is_record(_State, worldstate) ->
 
 start(Map) -> 
   State = #worldstate{ map = Map },
+  io:format("start world ~n~n"),
   gen_server:start({local, ?MODULE}, ?MODULE, [State],[]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -240,6 +241,7 @@ start(Map) ->
 
 start_link(Map) ->
   State = #worldstate{ map = Map },
+  io:format("start_link: world ~n~n"),
   gen_server:start_link({local, ?MODULE}, ?MODULE, [State],[]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -252,6 +254,7 @@ init([State]) ->
   rand:seed(exs1024,{erlang:phash2([node()]),
             erlang:monotonic_time(),
             erlang:unique_integer()}),
+  io:format("world init~n~n"),
   {ok, State}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

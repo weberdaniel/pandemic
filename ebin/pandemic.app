@@ -7,5 +7,7 @@
  {mod, {pandemic, []}},
  {description, "A nice erlang game"},
  {applications, [stdlib, kernel]},
- {env, [{filename,"config/game_config.xml"}]}
+ {env, [{gameconf,"config/game_config.xml"},
+        {authconf,"config/authfile"}
+       ]}
 ]}.

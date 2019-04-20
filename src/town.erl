@@ -574,11 +574,15 @@ init(_State) when is_record(_State, townstate) ->
   Coordinate = _State#townstate.coordinate,
   Lat        = Coordinate#coords.latitude,
   Long       = Coordinate#coords.longitude,
-  Response   = world:add( whereis(world), {Lat, Long, 
+  WorldPID   = whereis(world), 
+  case is_pid(WorldPID) of
+    true  -> Response = world:add( whereis(world), {Lat, Long, 
                    _State#townstate.name, town, self()  }),
-  Response = {ok, {Lat,Long, _State#townstate.name, town, self()}},
-  NewState = _State#townstate{ start_of_day_sec = StartOfDaySec },
-  {ok, NewState}.
+             Response = {ok, {Lat,Long, _State#townstate.name, town, self()}},
+             NewState = _State#townstate{ start_of_day_sec = StartOfDaySec },
+             {ok, NewState};
+    false -> {world_pid_not_found}
+  end.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1486,7 +1490,6 @@ decreasing_population_test() ->
   world:stop(world),
   town:stop(munich),
   auth:stop(auth)
-
   end}.
 
 -endif.

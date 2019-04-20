@@ -244,7 +244,7 @@ is_paused( _State ) when is_record(_State, playerstate) ->
 %%
 %% @doc This function asks the authentification server, with the name "auth",
 %%      whether the _Token has admin_permissions or not. It returns either
-%%      the atom "ok" or "fail".
+%%      the atom "ok","fail".
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -253,10 +253,14 @@ ask_auth_server_for_admin_permission(_Token) when is_list(_Token) ->
   AuthServerPID = whereis(auth),
   Token         =  _Token,
 
-  case auth:verify_admin(AuthServerPID, Token) of
-    {verify_admin_failed} -> fail;
-    {verify_admin_ok, _}  -> ok
+  case AuthServerPID of
+    undefined -> fail;
+    _ -> case auth:verify_admin(AuthServerPID, Token) of
+           {verify_admin_failed} -> fail;
+           {verify_admin_ok, _}  -> ok
+         end
   end.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
@@ -272,9 +276,12 @@ ask_auth_server_for_user_permission(_Token,_State)
   AuthServerPID = whereis(auth),
   Token         =  _Token,
 
-  case auth:verify(AuthServerPID, Token) of
-    {verify_failed} -> fail;
-    {verify_ok, _}  -> ok
+  case AuthServerPID of
+    undefined -> fail;
+    _ -> case auth:verify(AuthServerPID, Token) of
+           {verify_failed} -> fail;
+           {verify_ok, _}  -> ok
+         end
   end.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -872,19 +879,19 @@ latitude_test() ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 longitude_test() ->
-  Map = ets:new(world,[public,set]),
+  Map     = ets:new(world,[public,set]),
   {ok, _} = world:start(Map),
   {ok, _} = auth:start("../auth_testfile3"),
   {ok,T}  = auth:login(auth,"Daniel","blabla"),
   PlayerState =
-  #playerstate{ name = daniel, 
-                coordinate = #coords{ latitude = 49.461, 
-                             longitude = 11.062 },
-                location = undefined,
-                activity = undefined,
-                paused = false },
-  {ok, PlayerPid}       = player:start(PlayerState),
-  {Value} = player:longitude(PlayerPid,T),
+  #playerstate{ name       = daniel, 
+                coordinate = #coords{ latitude  = 49.461, 
+                                      longitude = 11.062 },
+                location   = undefined,
+                activity   = undefined,
+                paused     = false },
+  {ok, PlayerPid}          = player:start(PlayerState),
+  {Value}                  = player:longitude(PlayerPid,T),
   ?assert( Value =:= 11.062 ),
   world:stop(world),
   auth:stop(auth),

@@ -18,7 +18,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 -module(sup_world).
--export([start_link/0, init/1 ]).
+-export([start_link/0, init/1, start_link/1 ]).
 -behaviour(supervisor).
 
 -compile([debug_info]).
@@ -40,8 +40,11 @@
 %%      processes crashes, also the other one will crash.
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%
+
 start_link() ->
+  supervisor:start_link({local,?MODULE},?MODULE,[]).
+
+start_link([]) ->
   supervisor:start_link({local,?MODULE},?MODULE,[]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

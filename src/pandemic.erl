@@ -76,10 +76,13 @@ start(normal, []) ->
   %% read the file and start all processes from the xml structure in the file.
   %% otherwise start a default startup for testing purpose.
 
-  R = case application:get_env(filename) of 
+  R = case application:get_env(authconf) of 
     {ok, Value} -> case filelib:is_file(Value) of
-                     true -> pandemic_sup:start_link(Value);
-                     _    -> pandemic_sup:start_link()
+                     true ->  
+		       case application:get_env(gameconf) of
+			 {ok, Value2} -> pandemic_sup:start_link(Value,Value2);
+                         false        -> pandemic_sup:start_link(Value)
+                       end
                    end;
               _ -> pandemic_sup:start_link()
     end,

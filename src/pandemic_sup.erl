@@ -75,8 +75,8 @@ start_link(_AuthFile) when is_list(_AuthFile) ->
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-start_link(_Filename,_AuthFile) when is_list(_Filename), is_list(_AuthFile) ->
-  supervisor:start_link(?MODULE, [_Filename,_AuthFile]).
+start_link(_AuthFile,_GameFile) when is_list(_GameFile), is_list(_AuthFile) ->
+  supervisor:start_link(?MODULE, [_GameFile,_AuthFile]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
@@ -87,6 +87,8 @@ start_link(_Filename,_AuthFile) when is_list(_Filename), is_list(_AuthFile) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 init([_Filename,_AuthFile]) when is_list(_Filename), is_list(_AuthFile) ->
+
+  io:format("start NOT from scratch ~n~n"),
 
   MaxRestart = 5,
   MaxTime    = 60,
@@ -144,10 +146,10 @@ init([_Filename,_AuthFile]) when is_list(_Filename), is_list(_AuthFile) ->
                        )
                      ),
          {town_sup, start_link, [X]},
-         permanent,
-         5000,
-         worker,
-         [town]
+          permanent,
+          5000,
+          worker,
+          [town]
        };
       (X) when is_record(X, playerstate) ->
        {
@@ -176,21 +178,20 @@ init([_Filename,_AuthFile]) when is_list(_Filename), is_list(_AuthFile) ->
   SVTree = lists:append(
      [
 
-      { auth,
-        {sup_auth, start_link, [_AuthFile]},
-        permanent,
-        5000,
-        worker,
-        [auth]
-      },
-
      { world,
        {sup_world, start_link, []},
        permanent,
        5000,
        worker,
        [world]
-     }
+     },
+      { auth,
+        {sup_auth, start_link, [_AuthFile]},
+        permanent,
+        5000,
+        worker,
+        [auth]
+      }
 
    ], SupervisorTree),
 
@@ -210,6 +211,10 @@ init([_Filename,_AuthFile]) when is_list(_Filename), is_list(_AuthFile) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 init([]) ->
+
+
+  io:format("start from scratch ~n~n"),
+
   MaxRestart = 5,
   MaxTime    = 60,
 
