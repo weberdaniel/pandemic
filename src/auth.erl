@@ -269,7 +269,7 @@ stop(_PID) ->
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-character_access_token(_Token, _Records) when is_list(_Records), 
+get_character_by_access_token_if_online(_Token, _Records) when is_list(_Records), 
 					      is_list(_Token) ->
 
   % call get_character(_Token,X) for each element X of _Records in order to
@@ -277,7 +277,7 @@ character_access_token(_Token, _Records) when is_list(_Records),
 	
   Result = lists:map( 
 	              fun(X) ->
-                        get_character(_Token, X)
+                        get_character_if_online(_Token, X)
                       end, 
                       _Records 
 		    ),
@@ -299,13 +299,14 @@ character_access_token(_Token, _Records) when is_list(_Records),
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-level_access_token(_Token, _Records) when is_list(_Records), is_list(_Token) ->
+get_level_by_access_token_if_online(_Token, _Records) when is_list(_Records), 
+							   is_list(_Token) ->
 
   % call get_level(_Token,X) for each element X of _Records in order to
   % find the level belonging to the token
 
   Result = lists:map( fun(X) ->
-                        get_level(_Token, X)
+                        get_level_if_online(_Token, X)
                       end, 
                       _Records ),
   
@@ -368,7 +369,7 @@ verify_token(_Token, X) when is_record(X, auth), is_list(_Token) ->
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-get_level(_Token, X) when is_record(X, auth), is_list(_Token) ->
+get_level_if_online(_Token, X) when is_record(X, auth), is_list(_Token) ->
 
   % compare the token and check that the loginstate is online
   % if the loginstate is online return {ok, Level}
@@ -391,7 +392,7 @@ get_level(_Token, X) when is_record(X, auth), is_list(_Token) ->
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-get_character(_Token, X) when is_record(X, auth), is_list(_Token) ->
+get_character_if_online(_Token, X) when is_record(X, auth), is_list(_Token) ->
 	
   % compare the token and check that the loginstate is online
   % if so return {ok, Character}
@@ -584,8 +585,10 @@ parse_line(_Line,Acc) when is_binary(_Line) ->
                                                  end,
                           loginstate     = offline,
                           accesstoken    = undef,
-                          character      = Character,
-                          level          = Level
+                          character      = list_to_atom(Character),
+                          level          = list_to_integer(
+					     string:strip(Level)
+					   )
                         },
 
           lists:flatten( [Acc], [Record] )
@@ -962,12 +965,13 @@ when is_record(_State, authserverstate), is_list(_Token) ->
 
   % get the character belonging to the accesstoken
 
-  Result = character_access_token(_Token,_State#authserverstate.records),
+  Result = get_character_by_access_token_if_online(
+	     _Token, _State#authserverstate.records),
 
-  if Result == fail ->
+  if Result =:= fail ->
     {reply, {verify_failed}, _State};
-  is_list(Result) ->
-    {reply, {verify_ok, list_to_atom(Result)}, _State}
+  is_atom(Result) ->
+    {reply, {verify_ok, Result}, _State}
   end;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -983,12 +987,13 @@ when is_record(_State, authserverstate), is_list(_Token) ->
 
   % get the level belonging to the accesstoken
 
-  Result = level_access_token(_Token,_State#authserverstate.records),
+  Result = get_level_by_access_token_if_online(_Token,
+	      _State#authserverstate.records),
 
-  if Result == fail ->
+  if Result =:= fail ->
     {reply, {verify_failed}, _State};
-  is_list(Result) ->
-    {reply, {verify_ok, list_to_integer(Result)}, _State}
+  is_integer(Result) ->
+    {reply, {verify_ok, Result}, _State}
   end;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1183,8 +1188,6 @@ write_authrecord_to_file_and_read_it_test() ->
 	     level          = 3 }],
  write_file("../output_test2", R),
  Result = read_lines("../output_test2"),
- io:format(" Result: ~w ", [Result]),
- io:format(" R: ~w", [R]),
  ?assert( Result =:= R ).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
