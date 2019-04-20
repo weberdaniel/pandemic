@@ -293,8 +293,9 @@ init([]) ->
 -ifdef(TEST).
 
 start_test() ->
-  {ok, PID} = pandemic_sup:start_link("../config/test_game_config.xml",
-                                      "../auth_testfile3"),
+  {ok, PID} = pandemic_sup:start_link("../auth_testfile3",
+                                      "../config/test_game_config.xml"),
+                                      
   unlink(PID),
   exit(PID,shutdown),
   Ref = monitor(process, PID),

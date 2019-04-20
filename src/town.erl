@@ -1057,6 +1057,8 @@ terminate(_,_)              -> {ok}.
 -ifdef(TEST).
 
 begin_test() ->
+  Map = ets:new(world,[public,set]),
+  {ok, _} = world:start(Map),
   StateMunich = 
   #townstate{ name            = "blubber",
               coordinate      = #coords
@@ -1081,7 +1083,8 @@ begin_test() ->
     _ -> ok
   end,
   town:stop(blubber),
-  Result =:= ok.
+  ?assert(Result =:= ok),
+  world:stop(world).
 
 retrieve_state_test() ->
   Map = ets:new(world,[public,set]),
