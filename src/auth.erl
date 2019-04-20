@@ -570,12 +570,10 @@ parse_line(_Line,Acc) when is_binary(_Line) ->
     % if five entries are present, construct the corresponding
     % #auth record
 
-    5  ->  
-		  
-          Username = binary_to_list(lists:nth(1,Entries)),
+    5  -> Username = binary_to_list(lists:nth(1,Entries)),
           Password = binary_to_list(lists:nth(2,Entries)),
           Character = binary_to_list(lists:nth(3,Entries)),
-          Level = binary_to_list(lists:nth(4,Entries)),
+          Level =    binary_to_list(lists:nth(4,Entries)),
           Admin    = binary_to_list(lists:nth(5,Entries)),
 
           Record = #auth{ username       = Username,
@@ -1152,11 +1150,42 @@ authrecord_to_string_test() ->
 write_authrecord_to_file_test() ->
  R = [#auth{ username             = "r2",
                    hashedpassword = "d2",
-                   admin          = true  },
+                   admin          = true,
+	           character      = medic,
+	           level          = 3 },
       #auth{ username             = "k2",
                    hashedpassword = "so4",
-                   admin          = true  }],
+                   admin          = true,
+	           character      = medic,
+		   level          = 3 }],
  write_file("../output_test2", R).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% @doc try to write auth records to a file and read from it 
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+write_authrecord_to_file_and_read_it_test() ->
+ R = [#auth{ username             = "r2",
+             hashedpassword = "d2",
+             admin          = true,
+	     loginstate     = offline,
+	     accesstoken    = undef,
+             character      = medic,
+	     level          = 3 },
+      #auth{ username             = "k2",
+             hashedpassword = "so4",
+             admin          = true,
+	     loginstate     = offline,
+	     accesstoken    = undef,
+	     character      = medic,
+	     level          = 3 }],
+ write_file("../output_test2", R),
+ Result = read_lines("../output_test2"),
+ io:format(" Result: ~w ", [Result]),
+ io:format(" R: ~w", [R]),
+ ?assert( Result =:= R ).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
