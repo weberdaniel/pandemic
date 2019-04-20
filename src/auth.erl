@@ -34,7 +34,7 @@
 %%%%% LOW PRIORITY TASKS %%&%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% TODO: implement create_user
-%% TODO: implement write_file at shutdown and during pause mode
+%% TODO: implement a test case for the save functionality
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -70,6 +70,7 @@
          resume/2, 
          help/1,
          level/2, 
+	 save/3,
          character/2]).
 
 -ifdef(TEST).
@@ -155,6 +156,16 @@ login(_PID, _Username, _Password) when is_list(_Username),
 
 pause(_PID, _AdminToken) when is_list(_AdminToken) ->
   gen_server:call(_PID, {pause, _AdminToken}).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% @doc This interface function sends a synchronous {pause, _AdminToken}
+%%      message to the Server located at _PID.
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+save(_PID, _File, _AdminToken) when is_list(_AdminToken), is_list(_File) ->
+  gen_server:call(_PID, {save, _File, _AdminToken}).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
@@ -940,16 +951,20 @@ when is_record(_State, authserverstate)->
 
 handle_call({verify, _Token},_From,_State) 
 when is_record(_State, authserverstate), is_list(_Token) -> 
-	
-  % get the username belonging to the accesstoken
 
-  Result = verify_access_token(_Token,_State#authserverstate.records),
+  case _State#authserverstate.paused of
+    true  -> {reply, {paused}, _State};
+    _ -> 
+      % get the username belonging to the accesstoken
 
-  if Result == fail ->
-    {reply, {verify_failed}, _State};
-  is_list(Result) ->
-    {reply, {verify_ok, Result}, _State}
-  end;
+      Result = verify_access_token(_Token,_State#authserverstate.records),
+
+      if Result == fail ->
+        {reply, {verify_failed}, _State};
+      is_list(Result) ->
+        {reply, {verify_ok, Result}, _State}
+      end
+   end;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
@@ -963,15 +978,54 @@ when is_record(_State, authserverstate), is_list(_Token) ->
 handle_call({character, _Token},_From,_State) 
 when is_record(_State, authserverstate), is_list(_Token) -> 
 
-  % get the character belonging to the accesstoken
+  case _State#authserverstate.paused of
+    true -> 
+      {reply, {paused}, _State};
+    _ ->
+      % get the character belonging to the accesstoken
+      Result = get_character_by_access_token_if_online(
+	       _Token, _State#authserverstate.records),
 
-  Result = get_character_by_access_token_if_online(
-	     _Token, _State#authserverstate.records),
+      if Result =:= fail ->
+        {reply, {verify_failed}, _State};
+      is_atom(Result) ->
+        {reply, {verify_ok, Result}, _State}
+      end
+  end;
 
-  if Result =:= fail ->
-    {reply, {verify_failed}, _State};
-  is_atom(Result) ->
-    {reply, {verify_ok, Result}, _State}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% @doc This function handels an incoming synchronous {save, File, _AdminToken} 
+%%      message and verifies the _Token. It responds with {verify_failed},
+%%      or it responds with a message {saved}.
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+handle_call({save, _File, _AdminToken},_From,_State) 
+when is_record(_State, authserverstate), is_list(_AdminToken) -> 
+
+  case _State#authserverstate.paused of
+    true -> 
+      UsernameOfToken = verify_access_token(_AdminToken,
+                                        _State#authserverstate.records),
+      IsAdmin         = is_admin_token(_AdminToken, 
+                                       _State#authserverstate.records),
+
+      if 
+          %% if Username is not present OR no admin privileges are present,
+          %% return {verify_admin_failed}.
+
+          UsernameOfToken == fail; IsAdmin == false ->
+              {reply, {verify_admin_failed}, _State};
+
+          %% if Username exists AND admin privileges are present, save the
+          %% game and return {paused}.
+
+          is_list(UsernameOfToken), IsAdmin == true ->
+            write_file(_File, _State#authserverstate.records)
+      end;
+    _ ->
+      {reply, {not_paused}, _State}
   end;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -985,15 +1039,20 @@ when is_record(_State, authserverstate), is_list(_Token) ->
 handle_call({level, _Token},_From,_State) 
 when is_record(_State, authserverstate), is_list(_Token) -> 
 
-  % get the level belonging to the accesstoken
+  case _State#authserverstate.paused of
+    true -> 
+      {reply, {paused}, _State};
+    _ ->
+      % get the level belonging to the accesstoken
 
-  Result = get_level_by_access_token_if_online(_Token,
-	      _State#authserverstate.records),
+      Result = get_level_by_access_token_if_online(_Token,
+	          _State#authserverstate.records),
 
-  if Result =:= fail ->
-    {reply, {verify_failed}, _State};
-  is_integer(Result) ->
-    {reply, {verify_ok, Result}, _State}
+      if Result =:= fail ->
+         {reply, {verify_failed}, _State};
+      is_integer(Result) ->
+        {reply, {verify_ok, Result}, _State}
+      end
   end;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1007,15 +1066,20 @@ when is_record(_State, authserverstate), is_list(_Token) ->
 handle_call({verify_admin, _Token},_From,_State) 
 when is_list(_Token), is_record(_State,authserverstate) -> 
 
-  % get the username of the token and check if it has admin privileges
+  case _State#authserverstate.paused of
+    true -> 
+      {reply, {paused}, _State};
+    _ ->
+      % get the username of the token and check if it has admin privileges
 
-  UsernameOfToken = verify_access_token(_Token,_State#authserverstate.records),
-  IsAdmin         = is_admin_token(_Token, _State#authserverstate.records),
+      UsernameOfToken = verify_access_token(_Token,_State#authserverstate.records),
+      IsAdmin         = is_admin_token(_Token, _State#authserverstate.records),
 
-  if UsernameOfToken == fail; IsAdmin == false  ->
-    {reply, {verify_admin_failed}, _State};
-  is_list(UsernameOfToken), IsAdmin == true ->
-    {reply, {verify_admin_ok, UsernameOfToken}, _State}
+      if UsernameOfToken == fail; IsAdmin == false  ->
+         {reply, {verify_admin_failed}, _State};
+      is_list(UsernameOfToken), IsAdmin == true ->
+        {reply, {verify_admin_ok, UsernameOfToken}, _State}
+      end
   end;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1033,26 +1097,32 @@ when is_record(_State,authserverstate),
      is_list(_Username), 
      is_list(_HashedPassword) -> 
 
-  % try to authentificate the user, that wants to login
+  case _State#authserverstate.paused of
+    true -> 
+      {reply, {paused}, _State};
+    _ ->
+      % try to authentificate the user, that wants to login
 
-  Result = authentificate(_Username, _HashedPassword, 
-                          _State#authserverstate.records),
+      Result = authentificate(_Username, _HashedPassword, 
+                              _State#authserverstate.records),
 
-  if Result == ok ->
+      if Result == ok ->
 
-    % create a new access token and add it to the username, also
-    % set the new loginstate of the user to online.
+        % create a new access token and add it to the username, also
+        % set the new loginstate of the user to online.
 	     
-    Token = generate_access_token(_Username, _HashedPassword),
-    StringToken = lists:flatten(io_lib:format("~p", [Token])),
-    OldRecords = _State#authserverstate.records,
-    NewRecords = set_accesstoken_and_loginstate(_Username, StringToken, 
-                                                OldRecords, online),
-    NewState = _State#authserverstate{records = NewRecords},
-    {reply, {ok, StringToken}, NewState };
-  true ->
-    {reply, {Result}, _State}
+        Token = generate_access_token(_Username, _HashedPassword),
+        StringToken = lists:flatten(io_lib:format("~p", [Token])),
+        OldRecords = _State#authserverstate.records,
+        NewRecords = set_accesstoken_and_loginstate(_Username, StringToken, 
+                                                   OldRecords, online),
+        NewState = _State#authserverstate{records = NewRecords},
+        {reply, {ok, StringToken}, NewState };
+      true ->
+        {reply, {Result}, _State}
+      end
   end;
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
@@ -1065,19 +1135,24 @@ when is_record(_State,authserverstate),
 
 handle_call({logout, _Username, _Token},_From,_State) -> 
 
-  % check if the _Token belongs to the _Username
+  case _State#authserverstate.paused of
+    true -> 
+      {reply, {paused}, _State};
+    _ ->
+      % check if the _Token belongs to the _Username
 
-  Result = verify_access_token(_Token,_State#authserverstate.records),
+      Result = verify_access_token(_Token,_State#authserverstate.records),
 
-  if Result == fail ->
-    {reply, {fail}, _State};
-  is_list(Result) ->
+      if Result == fail ->
+        {reply, {fail}, _State};
+      is_list(Result) ->
 
-    % delete the access token of the user and set loginstate to offline
+       % delete the access token of the user and set loginstate to offline
 	     
-    NewRecords = set_offline( _Username, _State#authserverstate.records ),
-    NewState = _State#authserverstate{ records = NewRecords },
-    {reply, {ok}, NewState}
+       NewRecords = set_offline( _Username, _State#authserverstate.records ),
+       NewState = _State#authserverstate{ records = NewRecords },
+       {reply, {ok}, NewState}
+     end
   end.
 
 handle_info(_,_)   -> {ok}.
