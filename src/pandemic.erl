@@ -81,8 +81,9 @@ start(normal, []) ->
                      true ->  
 		       case application:get_env(gameconf) of
 			 {ok, Value2} -> pandemic_sup:start_link(Value,Value2);
-                         false        -> pandemic_sup:start_link(Value)
-                       end
+                         false        -> pandemic_sup:start_link()
+                       end;
+		     _ -> pandemic_sup:start_link()
                    end;
               _ -> pandemic_sup:start_link()
     end,
@@ -215,7 +216,9 @@ help() ->
 
 %%UNIT TESTS are currently not implemented
 application_test() ->
-  ok.
+  application:start(pandemic),
+  application:stop(pandemic).
+  
 
 -endif.
 

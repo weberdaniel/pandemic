@@ -34,7 +34,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 -module(pandemic_sup).
--export([start_link/1, init/1, start_link/2]).
+-export([init/1, start_link/2, start_link/0]).
 -behaviour(supervisor).
 
 -include("records.hrl").
@@ -56,16 +56,9 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%
-%% @doc This function starts the top-level-supervisor while linking it to
-%%      the calling process. This means if the top-level-supervisor dies,
-%%      then also the calling process will die.
-%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-start_link(_AuthFile) when is_list(_AuthFile) ->
+start_link()  ->
   supervisor:start_link(?MODULE, []).
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
@@ -87,8 +80,6 @@ start_link(_AuthFile,_GameFile) when is_list(_GameFile), is_list(_AuthFile) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 init([_Filename,_AuthFile]) when is_list(_Filename), is_list(_AuthFile) ->
-
-  io:format("start NOT from scratch ~n~n"),
 
   MaxRestart = 5,
   MaxTime    = 60,
@@ -212,9 +203,6 @@ init([_Filename,_AuthFile]) when is_list(_Filename), is_list(_AuthFile) ->
 
 init([]) ->
 
-
-  io:format("start from scratch ~n~n"),
-
   MaxRestart = 5,
   MaxTime    = 60,
 
@@ -256,6 +244,15 @@ init([]) ->
 
   {ok, {{one_for_one, MaxRestart, MaxTime},
         [
+
+     { world,
+       {sup_world, start_link, []},
+       permanent,
+       5000,
+       worker,
+       [world]
+     },
+
           {munich_sup,
             {town_sup, start_link, [StateMunich]},
             permanent,
