@@ -1361,7 +1361,7 @@ infected_test() ->
   Map         = ets:new(world,[public,set]),
   {ok, _}     = world:start(Map),
   {ok, _}     = auth:start("../auth_testfile3"),
-  {ok,Token}  = auth:login(auth,"Daniel","blabla"),
+  {ok,_}  = auth:login(auth,"Daniel","blabla"),
   StateMunich = 
   #townstate{ name            = "munich",
               coordinate      = #coords
@@ -1396,6 +1396,43 @@ infected_test() ->
 help_test() ->
   town:help(),
   town:help(longitude).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% @doc test if it is possible to get population
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+population_test() ->
+  Map         = ets:new(world,[public,set]),
+  {ok, _}     = world:start(Map),
+  {ok, _}     = auth:start("../auth_testfile3"),
+  {ok,_}  = auth:login(auth,"Daniel","blabla"),
+  StateMunich = 
+  #townstate{ name            = "munich",
+              coordinate      = #coords
+              { 
+                latitude      = 48.144,
+                longitude     = 11.558
+              },
+              population      = 1300000,
+              birthrate       = 20.0,
+              infectionrate   = 5.0,
+              lethality       = 30.0,
+              infectedpopulation = 1234,
+              travelrate      = 400,
+              connections     = [],
+              airport         = open,
+              roads           = open,
+              paused          = false,
+              players         = []
+            },
+  {ok,PID}         = town:start(StateMunich),
+  {Number} = town:population(PID),
+  ?assert( Number =:= 1300000 ),
+  world:stop(world),
+  town:stop(munich),
+  auth:stop(auth).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
@@ -1437,8 +1474,8 @@ heal_test() ->
   {ok,_}         = town:start(StateMunich),
   {ok, PlayerPid}        = player:start(PlayerState),
   {ok}           = player:join( daniel, munich, town, Token ),
-
   Result = player:heal(PlayerPid, Token),
+  ?assert( Result =:= {3} ),
   world:stop(world),
   town:stop(munich),
   auth:stop(auth),

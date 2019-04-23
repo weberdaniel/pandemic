@@ -878,6 +878,23 @@ latitude_test() ->
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+level_test() ->
+  Map       = ets:new(world,[public,set]),
+  {ok, _}   = world:start(Map),
+  {ok, PID} = auth:start("../auth_testfile3"),
+  {ok,T}    = auth:login(auth,"Daniel","blabla"),
+  {verify_ok,Level}   = player:level(PID,T),
+  ?assert( 3 =:= Level ),
+  world:stop(world),
+  auth:stop(auth),
+  player:stop(daniel).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% @doc Test to check the paused state
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 longitude_test() ->
   Map     = ets:new(world,[public,set]),
   {ok, _} = world:start(Map),
