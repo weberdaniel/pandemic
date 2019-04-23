@@ -1353,6 +1353,40 @@ add_connection_test() ->
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
+%% @doc update_test
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+update_test() ->
+  StartOfDayNative  = erlang:monotonic_time(),
+  StartOfDaySec = erlang:convert_time_unit(StartOfDayNative, native,
+                    seconds),
+  StateMunich = 
+  #townstate{ name            = "munich",
+              coordinate      = #coords
+              { 
+                latitude  = 48.144,
+                longitude = 11.558
+              },
+              population      = 1300000,
+              birthrate       = 20.0,
+              infectionrate   = 5.0,
+              lethality       = 30.0,
+              infectedpopulation = 1234,
+              travelrate      = 400,
+              connections     = [],
+              airport         = open,
+              roads           = open,
+              paused          = false,
+              players         = [],
+	      start_of_day_sec = StartOfDaySec - 
+	      ?LENGTH_OF_DAY_HOUR * ?LENGTH_OF_HOUR_SEC * ?LENGTH_OF_SEC_SEC - 20
+            },
+  NewState = update( StateMunich),
+  ?assert( NewState#townstate.population =/= StateMunich#townstate.population ).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
 %% @doc Test the infected interface
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
