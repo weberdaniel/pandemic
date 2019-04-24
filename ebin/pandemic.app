@@ -1,6 +1,6 @@
 {application, pandemic, 
 [{vsn,"1.0.0"},
- {modules, [pandemic, world, country, town, town_sup, country_sup,
+ {modules, [pandemic, world, town, town_sup,
             sup_world, auth, calc, player, player_sup, sup_auth,
             vehicle, xml_parser, pandemic_sup]},
  {registered, []},

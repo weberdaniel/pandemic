@@ -34,7 +34,6 @@
 %%%%% LOW PRIORITY TASKS %%&%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% TODO: implement create_user
-%% TODO: implement a test case for the save functionality
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1022,7 +1021,8 @@ when is_record(_State, authserverstate), is_list(_AdminToken) ->
           %% game and return {paused}.
 
           is_list(UsernameOfToken), IsAdmin == true ->
-            write_file(_File, _State#authserverstate.records)
+            write_file(_File, _State#authserverstate.records),
+	    {reply, {saved}, _State}
       end;
     _ ->
       {reply, {not_paused}, _State}
@@ -1373,6 +1373,28 @@ try_fail_verify_character_test() ->
   {ok, _} = auth:login(PID,"Daniel","blabla"),
   {verify_failed} = auth:character(PID,"asdfasdf"),
   auth:stop(PID).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% @doc try to pause the auth server, save the state to a file and resume it.
+%%      Verify that the saved file equals the startup configuration file.
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+try_save_test() ->
+  file:delete("../blabla.ex"),
+  {ok, PID}   = auth:start("../auth_testfile3"),
+  {ok, T}     = auth:login(PID,"Daniel","blabla"),
+  auth:pause(PID,T),
+  auth:save(PID, "../blabla.ex", T),
+  ISFile  = filelib:is_file("../blabla.ex"),
+  ?assert( true =:= ISFile ),
+  Result  = read_lines("../auth_testfile3"),
+  Result2 = read_lines("../blabla.ex"),
+  ?assert(Result =:= Result2),
+  auth:resume(PID,T),
+  auth:stop(PID),
+  file:delete("../blabla.ex").
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
