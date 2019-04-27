@@ -66,16 +66,16 @@
 harvesine( A, B ) when is_record(A, coords), 
                       is_record(B, coords) ->
 
-  DeltaLatitude  = (B#coords.latitude  - A#coords.latitude) /360*2*math:pi(),
-  DeltaLongitude = (B#coords.longitude - A#coords.longitude)/360*2*math:pi(),
+  DeltaLatitude  = (B#coords.latitude  - A#coords.latitude) /360.0*2.0*math:pi(),
+  DeltaLongitude = (B#coords.longitude - A#coords.longitude)/360.0*2.0*math:pi(),
 
-  X = math:pow( math:sin( DeltaLatitude/2 ), 2) + 
-      math:cos( B#coords.latitude ) * 
-      math:sin( A#coords.latitude ) * 
-      math:pow( math:sin( DeltaLongitude/2 ), 2),
+  X = math:pow( math:sin( DeltaLatitude/2.0 ), 2) + 
+      math:cos( B#coords.latitude*math:pi()/180.0 ) * 
+      math:cos( A#coords.latitude*math:pi()/180.0 ) * 
+      math:pow( math:sin( DeltaLongitude/2.0 ), 2),
 
-  Y = 2 * math:atan2( math:sqrt(X), math:sqrt(1-X) ),
-  DistanceKm = 6371 * Y,
+  Y = 2.0 * math:atan2( math:sqrt(X), math:sqrt(1.0-X) ),
+  DistanceKm = 6371.0 * Y,
 
   DistanceKm;
 
@@ -92,13 +92,13 @@ harvesine( A, B ) when is_record(A, location),
   DeltaLongitude = (B#location.longitude - 
                     A#location.longitude)/360*2*math:pi(),
 
-  X = math:pow( math:sin( DeltaLatitude/2 ), 2) + 
-      math:cos( B#location.latitude ) * 
-      math:sin( A#location.latitude ) * 
-      math:pow( math:sin( DeltaLongitude/2 ), 2),
+  X = math:pow( math:sin( DeltaLatitude/2.0 ), 2) + 
+      math:cos( B#location.latitude*math:pi()/180.0 ) * 
+      math:cos( A#location.latitude*math:pi()/180.0 ) * 
+      math:pow( math:sin( DeltaLongitude/2.0 ), 2),
 
-  Y = 2 * math:atan2( math:sqrt(X), math:sqrt(1-X) ),
-  DistanceKm = 6371 * Y,
+  Y = 2.0 * math:atan2( math:sqrt(X), math:sqrt(1-X) ),
+  DistanceKm = 6371.0 * Y,
 
   DistanceKm.
 
@@ -433,6 +433,34 @@ course_coords_test() ->
    -78.42236042001993,
    168.5567762850174,
    18742.658374455805} = course(Valparaiso, Shanghai).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% @doc test the harvesine/2 function, with #coords arguments
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+harvesine_coords_test() ->
+
+  A = #coords{ latitude = 51.5007 , longitude = 0.1246 },
+  B = #coords{ latitude = 40.6892,  longitude = 74.0445 },
+
+  Result = harvesine(A,B),
+  ?assert( 5574 =:= trunc(harvesine(A, B))).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% @doc test the harvesine/2 function, with #location arguments
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+harvesine_location_test() ->
+
+  A = #location{ latitude = 51.5007 , longitude = 0.1246 },
+  B = #location{ latitude = 40.6892,  longitude = 74.0445 },
+
+  Result = harvesine(A,B),
+  ?assert( 5574 =:= trunc(harvesine(A, B))).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
