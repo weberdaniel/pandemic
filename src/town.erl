@@ -205,7 +205,7 @@ infected(_PID) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 coordinates(_PID) ->
-  gen_server:call(_PID, {coordinate}).
+  gen_server:call(_PID, {coordinates}).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
@@ -836,7 +836,7 @@ handle_call({latitude},_From,_State) when is_record(_State, townstate) ->
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-handle_call({coordinate},_From,_State) when is_record(_State, townstate) -> 
+handle_call({coordinates},_From,_State) when is_record(_State, townstate) -> 
   case is_paused(_State) of
     true -> {reply, {paused}, _State};
     false -> {reply, {_State#townstate.coordinate}, _State}
@@ -1082,9 +1082,13 @@ begin_test() ->
     undefined -> fail;
     _ -> ok
   end,
-  town:stop(blubber),
-  ?assert(Result =:= ok),
-  world:stop(world).
+  {Coords} = town:coordinates(blubber),
+  Expect = #coords{ latitude = 48.144, 
+	            longitude = 11.558 },
+  ?assert( Coords =:= Expect ),
+  ?assert( Result =:= ok),
+  world:stop(world),
+  town:stop(blubber).
 
 retrieve_state_test() ->
   Map = ets:new(world,[public,set]),
