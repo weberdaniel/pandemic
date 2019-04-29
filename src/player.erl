@@ -340,10 +340,15 @@ init([_Playerstate]) when is_record(_Playerstate, playerstate) ->
             erlang:unique_integer()}),
   Lat  = _Playerstate#playerstate.coordinate#coords.latitude,
   Long = _Playerstate#playerstate.coordinate#coords.longitude,
-  Response   = world:add( whereis(world), {Lat, Long, 
-                   _Playerstate#playerstate.name, player, self()  }),
-  Response = {ok, {Lat,Long, _Playerstate#playerstate.name, player, self()}},
-  {ok, _Playerstate}.
+  case whereis(world) of
+    undefined -> {world_pid_not_found};
+    _ -> Response   = world:add( whereis(world), {Lat, Long, 
+                                 _Playerstate#playerstate.name, 
+				 player, self()  }),
+         Response = {ok, {Lat,Long, _Playerstate#playerstate.name, player, 
+			  self()}},
+         {ok, _Playerstate}
+  end.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -483,8 +488,10 @@ when is_record(_State,playerstate), is_list(_AdminToken) ->
 handle_call({is_paused},_From,_State) 
 when is_record(_State,playerstate) -> 
 
+
   case is_paused(_State) of
-    true -> {reply, {paused}, _State};
+    true -> io:format("is_paused: true ~n",[]),
+            {reply, {paused}, _State};
     _    -> {reply, {not_paused}, _State}
   end;
 

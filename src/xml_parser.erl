@@ -1243,7 +1243,7 @@ build_xml_player_savegame(_State) when is_record(_State, playerstate) ->
      [
        #xmlElement{ name = name,
 		    content = 
-		    [ #xmlText{ value = atom_to_list(_State#playerstate.name) } ]
+		    [ #xmlText{ value = _State#playerstate.name } ]
 		  },
        #xmlElement{ name = character,
 		    content = 
@@ -1439,7 +1439,7 @@ build_xml_town_savegame_test() ->
 
 build_xml_player_savegame_test() ->
   StatePlayer= 
-  #playerstate{ name            = daniel,
+  #playerstate{ name            = "daniel",
                 coordinate      = #coords
                 { 
                   latitude  = 48.144,

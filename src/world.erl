@@ -230,7 +230,6 @@ is_paused(_State) when is_record(_State, worldstate) ->
 
 start(Map) -> 
   State = #worldstate{ map = Map },
-  io:format("start world ~n~n"),
   gen_server:start({local, ?MODULE}, ?MODULE, [State],[]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -241,7 +240,6 @@ start(Map) ->
 
 start_link(Map) ->
   State = #worldstate{ map = Map },
-  io:format("start_link: world ~n~n"),
   gen_server:start_link({local, ?MODULE}, ?MODULE, [State],[]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -254,7 +252,6 @@ init([State]) ->
   rand:seed(exs1024,{erlang:phash2([node()]),
             erlang:monotonic_time(),
             erlang:unique_integer()}),
-  io:format("world init~n~n"),
   {ok, State}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -607,10 +604,10 @@ pause_all_registered_processes_test() ->
   auth:stop(auth),
   town:stop(nuremberg),
   town:stop(munich),
-  {Result, Result2} =:= {{paused},{paused}}.
+  ?assert({Result, Result2} =:= {{paused},{paused}}).
 
 try_save_all_processes_test() ->
-  Map = ets:new(world,[public,set]),
+  Map     = ets:new(world,[public,set]),
   {ok, _} = world:start(Map),
   {ok, _} = auth:start("../auth_testfile3"),
   {ok,K}  = auth:login(auth,"Daniel","blabla"),
@@ -623,11 +620,11 @@ try_save_all_processes_test() ->
                   longitude = 11.062
                 },
                 population    = 1300000,
-                connections   = [],
                 birthrate     = 20.0,
                 infectionrate = 5.0,
                 lethality     = 30.0,
                 travelrate    = 400,
+                connections   = [],
                 airport       = open,
                 roads         = open,
                 players       = []
@@ -650,17 +647,31 @@ try_save_all_processes_test() ->
               roads           = open,
               players         = []
             },
+
   PlayerState =
-  #playerstate{ name = "daniel", 
-                coordinate = #coords{ latitude = 49.461, longitude = 11.062 },
-                location = undefined,
-                activity = undefined,
-                paused = false
-  },
-  {ok,_} = player:start(PlayerState),
+  #playerstate{ name       = "daniel", 
+                coordinate = #coords{ latitude = 49.462, longitude = 11.062 },
+                location   = #location{latitude = 49.462, longitude = 11.062 },
+                activity   = undefined,
+		level      = 3,
+		character  = medic,
+                paused     = false },
+
   {ok,_} = town:start(StateMunich),
   {ok,_} = town:start(StateNuremberg),
+  {ok,_} = player:start(PlayerState),
+
   world:pause(world, K),
+  Result  = town:paused(nuremberg),
+  Result2 = town:paused(munich),
+  PIDDaniel = whereis(daniel),
+  ?assert( is_pid(PIDDaniel)),
+  Result3 = player:paused(daniel),
+  ?assert({Result, Result2} =:= {{paused},{paused}}),
+  ?assert(Result3 =:= {paused}),
+
+
+
   world:save(world, K),
   
   town:stop(munich),

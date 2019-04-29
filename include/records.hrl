@@ -78,7 +78,7 @@
                           paused }).   % can be paused, either true or false}).
 
 -record(playerstate, { %player nickname
-	               name   :: atom(),       
+	               name   :: string(),       
                        %coordinate
                        coordinate ,   
                        %if the player has joined a specific location like a city
