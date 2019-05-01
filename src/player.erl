@@ -635,8 +635,16 @@ when is_record(_State,playerstate) ->
   end;
 
 
-handle_call(_,_,_State)     -> io:format("unknonwn call...~n"),
-	                       {noreply, _State}.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% @doc The process should no crash in case of an unkown message, as this
+%% case can be easily ignored. Here we assume that there will be no process
+%% spamming this process with unkown messages, otherwise we would need to
+%% limit this behaviour.
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+handle_call(_,_,_State)     -> {reply, {unknown_message}, _State}.
 handle_info(_,_)            -> {ok}.
 handle_cast({stop}, State)  -> {stop, normal, State}.
 code_change(_,_,_)          -> {ok}.
@@ -917,6 +925,33 @@ longitude_test() ->
   {ok, PlayerPid}          = player:start(PlayerState),
   {Value}                  = player:longitude(PlayerPid,T),
   ?assert( Value =:= 11.062 ),
+  world:stop(world),
+  auth:stop(auth),
+  player:stop(daniel).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% @doc unit test to send an unkown message to the process. The process should
+%%      not crash in this case, because this is a problem that can easily be
+%%      ignored
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+unkown_message_test() ->
+  Map     = ets:new(world,[public,set]),
+  {ok, _} = world:start(Map),
+  {ok, _} = auth:start("../auth_testfile3"),
+  {ok,T}  = auth:login(auth,"Daniel","blabla"),
+  PlayerState =
+  #playerstate{ name       = daniel, 
+                coordinate = #coords{ latitude  = 49.461, 
+                                      longitude = 11.062 },
+                location   = undefined,
+                activity   = undefined,
+                paused     = false },
+  {ok, PlayerPid}          = player:start(PlayerState),
+  Result = town:population(daniel),
+  ?assert( Result =:= {unknown_message} ),
   world:stop(world),
   auth:stop(auth),
   player:stop(daniel).

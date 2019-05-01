@@ -528,6 +528,7 @@ when is_record(_Record, auth), is_list(_HashedPassword), is_list(_Username) ->
     true  -> case string:equal(_HashedPassword, 
                                _Record#auth.hashedpassword) of
 
+
                %if pw and username match, check if loginstate is online or
 	       %offline. If online, return fail_no_loginstate. Only persons
 	       %shall be allowed to authentificate, which are currently 
@@ -538,13 +539,15 @@ when is_record(_Record, auth), is_list(_HashedPassword), is_list(_Username) ->
                          offline -> ok
                        end;
 
-               %pw and username don't match, so return fail_no_password
+               %pw don't match, so return fail_no_password
 		     
-               false -> {fail_no_password, _HashedPassword, 
-                         _Record#auth.hashedpassword}
+               false -> fail_no_password
+                         
              end;
     %username don't match
-    false -> fail_no_user
+    false -> io:format("~s ~n", [_Username]),
+	     io:format("~s ~n", [_Record#auth.username]),
+		  fail_no_user
   end.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -581,25 +584,26 @@ parse_line(_Line,Acc) when is_binary(_Line) ->
     % if five entries are present, construct the corresponding
     % #auth record
 
-    5  -> Username = binary_to_list(lists:nth(1,Entries)),
-          Password = binary_to_list(lists:nth(2,Entries)),
+    5  -> Username  = binary_to_list(lists:nth(1,Entries)),
+          Password  = binary_to_list(lists:nth(2,Entries)),
           Character = binary_to_list(lists:nth(3,Entries)),
-          Level =    binary_to_list(lists:nth(4,Entries)),
-          Admin    = binary_to_list(lists:nth(5,Entries)),
+          Level     = binary_to_list(lists:nth(4,Entries)),
+          Admin     = binary_to_list(lists:nth(5,Entries)),
 
-          Record = #auth{ username       = Username,
-                          hashedpassword = Password,
-                          admin          = case string:strip(Admin) of
+          Record    = #auth{ username       = Username,
+                             hashedpassword = Password,
+                             admin          = case string:strip(Admin) of
                                                    "true" -> true;
                                                    "false" -> false
-                                                 end,
-                          loginstate     = offline,
-                          accesstoken    = undef,
-                          character      = list_to_atom(Character),
-                          level          = list_to_integer(
-					     string:strip(Level)
-					   )
-                        },
+                                               end,
+                             loginstate     = offline,
+                             accesstoken    = undef,
+			     % TODO this collides with records definition
+                             character      = list_to_atom(Character), 
+                             level          = list_to_integer(
+					         string:strip(Level)
+					      )
+                           },
 
           lists:flatten( [Acc], [Record] )
   end.
@@ -1153,8 +1157,9 @@ handle_call({logout, _Username, _Token},_From,_State) ->
        NewState = _State#authserverstate{ records = NewRecords },
        {reply, {ok}, NewState}
      end
-  end.
+  end;
 
+handle_call(_,_,_State) -> {reply, {unknown_message}, _State}.
 handle_info(_,_)   -> {ok}.
 handle_cast({stop},_State)   -> {stop,normal,_State}.
 code_change(_,_,_) -> {ok}.
@@ -1312,6 +1317,30 @@ try_verify_when_not_logged_in_test() ->
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
+%% @doc start the auth server and try to verify that password is wrong
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+try_no_password_test() ->
+  {ok, PID} = auth:start("../auth_testfile3"),
+  {Result}  = auth:login(PID, "Daniel", "ka"),
+  auth:stop(PID),
+  ?assert(Result =:= fail_no_password).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% @doc start the auth server and try to verify that user is not present
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+try_no_user_test() ->
+  {ok, PID} = auth:start("../auth_testfile3"),
+  {Result}  = auth:login(PID, "Vuffi", "ka"),
+  auth:stop(PID),
+  ?assert(Result =:= fail_no_user).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
 %% @doc try to login and try to verfy a token, then logout and check that the
 %%      token has become invalid.
 %%
@@ -1426,6 +1455,19 @@ help_test() ->
   auth:help(level),
   auth:help(logout),
   auth:help(verify_admin).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% @doc unkown message test
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+unkown_message_test() ->
+  {ok, PID}   = auth:start("../auth_testfile3"),
+  {Result} = town:population(PID),
+  auth:stop(PID),
+  io:format("~w", [Result]),
+  ?assert( Result =:= unknown_message ).
 
 -endif.
 
