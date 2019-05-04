@@ -1521,6 +1521,53 @@ heal_test() ->
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
+%% @doc verify that it is impossible to heal if you have the wrong character
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+heal_wrong_character_test() ->
+  Map        = ets:new(world,[public,set]),
+  {ok, _}    = world:start(Map),
+  {ok, _}    = auth:start("../auth_testfile3"),
+  {ok,Token} = auth:login(auth,"Fabian","blabla"),
+
+  % player must be at the same position as town
+  PlayerState = #playerstate{ name = daniel, 
+                coordinate = #coords{ latitude = 48.144, longitude = 11.558 },
+                location   = undefined,
+                activity   = undefined,
+                paused     = false},
+  StateMunich = 
+  #townstate{ name            = "munich",
+              coordinate      = #coords
+              { 
+                latitude  = 48.144,
+                longitude = 11.558
+              },
+              population      = 1300000,
+              birthrate       = 20.0,
+              infectionrate   = 5.0,
+              lethality       = 30.0,
+              infectedpopulation = 1234,
+              travelrate      = 400,
+              connections     = [],
+              airport         = open,
+              roads           = open,
+              paused          = false,
+              players         = []
+            },
+  {ok,_}          = town:start(StateMunich),
+  {ok, PlayerPid} = player:start(PlayerState),
+  {ok}            = player:join( daniel, munich, town, Token ),
+  Result          = player:heal(PlayerPid, Token),
+  ?assert( Result =:= {wrong_character} ),
+  world:stop(world),
+  town:stop(munich),
+  auth:stop(auth),
+  player:stop(daniel).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
 %% @doc This is a test generator function. It changes the default of 5 seconds
 %% test timeout to 40 seconds
 %%
