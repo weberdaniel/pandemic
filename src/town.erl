@@ -1030,10 +1030,9 @@ when is_record(_OldState, townstate)  ->
 handle_call({infected},_From,_OldState) 
 when is_record(_OldState, townstate)  -> 
   State = update(_OldState), 
-  {reply, {State#townstate.infectedpopulation}, State}.
-
+  {reply, {State#townstate.infectedpopulation}, State};
+handle_call(_,_,_OldState)  -> {reply,{unknown_message}, _OldState}.
 handle_info(_,_)            -> {ok}.
-
 handle_cast({stop}, State)  -> {stop, normal, State}.
 code_change(_,_,_)          -> {ok}.
 terminate(_,_)              -> {ok}.
@@ -1616,6 +1615,45 @@ decreasing_population_test() ->
   town:stop(munich),
   auth:stop(auth)
   end}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% @doc unkown message test
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+unkown_message_test() ->
+
+  Map = ets:new(world,[public,set]),
+  {ok, _} = world:start(Map),
+  {ok, _} = auth:start("../auth_testfile3"),
+  {ok,Token}  = auth:login(auth,"Daniel","blabla"),
+  StateMunich = 
+  #townstate{ name            = "munich",
+              coordinate      = #coords
+              { 
+                latitude  = 48.144,
+                longitude = 11.558
+              },
+              population      = 1000,
+              infectedpopulation = 1,
+              birthrate       = 0.0,
+              infectionrate   = 3.0,
+              lethality       = 1.0,
+              travelrate      = 0,
+              connections     = [],
+              airport         = open,
+              roads           = open,
+              paused          = false,
+              players         = []
+            },
+
+  {ok,TPID}         = town:start(StateMunich),
+  {Result}       = auth:login(TPID,"Daniel","blabla"),
+  world:stop(world),
+  town:stop(munich),
+  auth:stop(auth),
+  ?assert( Result =:= unknown_message ).
 
 -endif.
 
