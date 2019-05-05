@@ -33,7 +33,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%% LOW PRIORITY TASKS %%&%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% TODO: implement create_user
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -50,7 +49,6 @@
 -export([
          help/0, 
          login/3, 
-         create_user/4, 
          verify/2, 
          logout/3, 
          stop/1,
@@ -100,7 +98,6 @@
 
 help() ->
   io:format(" login(PID, Username, Password)~n"),
-  io:format(" create_user(PID, Username, Password, AdminToken)~n"),
   io:format(" verify(PID, Username, Token)~n"),
   io:format(" character(PID, _Token)~n"),
   io:format(" level(PID, _Token)~n"),
@@ -125,8 +122,6 @@ help(verify) ->
   io:format(" verify(PID, Username, Token): Verify that the username ~n"),
   io:format("        belongs to the Token. Returns {verify_ok, Username}"),
   io:format("~n        or {verify_failed}. ~n");
-help(create_user) ->
-  io:format(" ");
 help(character) ->
   io:format(" ");
 help(level) ->
@@ -209,17 +204,6 @@ character(_PID, _Token) when is_list(_Token) ->
 
 resume(_PID, _AdminToken) when is_list(_AdminToken) ->
   gen_server:call(_PID, {resume, _AdminToken}).
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%
-%% @doc NOT IMPLEMENTED YET.
-%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-create_user(_PID, _Username, _Password, _AdminToken) ->
-  gen_server:call(_PID, {create_user, _Username, 
-                 lists:flatten(io_lib:format("~p",[erlang:phash2(_Password)])),
-                  _AdminToken}).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
@@ -545,9 +529,7 @@ when is_record(_Record, auth), is_list(_HashedPassword), is_list(_Username) ->
                          
              end;
     %username don't match
-    false -> io:format("~s ~n", [_Username]),
-	     io:format("~s ~n", [_Record#auth.username]),
-		  fail_no_user
+    false -> fail_no_user
   end.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1449,7 +1431,6 @@ try_pause_auth_test() ->
 help_test() ->
   auth:help(),
   auth:help(login),
-  auth:help(create_user),
   auth:help(verify),
   auth:help(character),
   auth:help(level),
@@ -1466,7 +1447,6 @@ unkown_message_test() ->
   {ok, PID}   = auth:start("../auth_testfile3"),
   {Result} = town:population(PID),
   auth:stop(PID),
-  io:format("~w", [Result]),
   ?assert( Result =:= unknown_message ).
 
 -endif.

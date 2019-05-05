@@ -490,8 +490,7 @@ when is_record(_State,playerstate) ->
 
 
   case is_paused(_State) of
-    true -> io:format("is_paused: true ~n",[]),
-            {reply, {paused}, _State};
+    true -> {reply, {paused}, _State};
     _    -> {reply, {not_paused}, _State}
   end;
 

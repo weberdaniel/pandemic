@@ -53,6 +53,7 @@
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
+-define(TESTSAVE, {[{{xmlElement,town,[],[],{xmlNamespace,[],[]},[],undefined,[],[{xmlElement,name,[],[],{xmlNamespace,[],[]},[],undefined,[],[{xmlText,[],undefined,[],[109,117,110,105,99,104],text}],[],[],undeclared},{xmlElement,population,[],[],{xmlNamespace,[],[]},[],undefined,[],[{xmlText,[],undefined,[],[49,51,48,48,48,48,48],text}],[],[],undeclared},{xmlElement,birthrate,[],[],{xmlNamespace,[],[]},[],undefined,[],[{xmlText,[],undefined,[],[50,46,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,101,43,48,49],text}],[],[],undeclared},{xmlElement,infectionrate,[],[],{xmlNamespace,[],[]},[],undefined,[],[{xmlText,[],undefined,[],[53,46,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,101,43,48,48],text}],[],[],undeclared},{xmlElement,lethality,[],[],{xmlNamespace,[],[]},[],undefined,[],[{xmlText,[],undefined,[],[51,46,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,101,43,48,49],text}],[],[],undeclared},{xmlElement,travelrate,[],[],{xmlNamespace,[],[]},[],undefined,[],[{xmlText,[],undefined,[],[52,48,48],text}],[],[],undeclared},{xmlElement,airport,[],[],{xmlNamespace,[],[]},[],undefined,[],[{xmlText,[],undefined,[],[111,112,101,110],text}],[],[],undeclared},{xmlElement,roads,[],[],{xmlNamespace,[],[]},[],undefined,[],[{xmlText,[],undefined,[],[111,112,101,110],text}],[],[],undeclared},{xmlElement,harbor,[],[],{xmlNamespace,[],[]},[],undefined,[],[{xmlText,[],undefined,[],[117,110,100,101,102,105,110,101,100],text}],[],[],undeclared},{xmlElement,connections,[],[],{xmlNamespace,[],[]},[],undefined,[],[],[],[],undeclared},{xmlElement,coordinate,[],[],{xmlNamespace,[],[]},[],undefined,[],[{xmlElement,latitude,[],[],{xmlNamespace,[],[]},[],undefined,[],[{xmlText,[],undefined,[],[52,46,56,49,52,51,57,57,57,57,57,57,57,57,57,57,57,56,51,53,49,53,101,43,48,49],text}],[],[],undeclared},{xmlElement,longitude,[],[],{xmlNamespace,[],[]},[],undefined,[],[{xmlText,[],undefined,[],[49,46,49,53,53,55,57,57,57,57,57,57,57,57,57,57,57,57,56,50,57,53,101,43,48,49],text}],[],[],undeclared}],[],[],undeclared}],[],[],undeclared}},{{xmlElement,town,[],[],{xmlNamespace,[],[]},[],undefined,[],[{xmlElement,name,[],[],{xmlNamespace,[],[]},[],undefined,[],[{xmlText,[],undefined,[],[110,117,114,101,109,98,101,114,103],text}],[],[],undeclared},{xmlElement,population,[],[],{xmlNamespace,[],[]},[],undefined,[],[{xmlText,[],undefined,[],[49,51,48,48,48,48,48],text}],[],[],undeclared},{xmlElement,birthrate,[],[],{xmlNamespace,[],[]},[],undefined,[],[{xmlText,[],undefined,[],[50,46,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,101,43,48,49],text}],[],[],undeclared},{xmlElement,infectionrate,[],[],{xmlNamespace,[],[]},[],undefined,[],[{xmlText,[],undefined,[],[53,46,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,101,43,48,48],text}],[],[],undeclared},{xmlElement,lethality,[],[],{xmlNamespace,[],[]},[],undefined,[],[{xmlText,[],undefined,[],[51,46,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,48,101,43,48,49],text}],[],[],undeclared},{xmlElement,travelrate,[],[],{xmlNamespace,[],[]},[],undefined,[],[{xmlText,[],undefined,[],[52,48,48],text}],[],[],undeclared},{xmlElement,airport,[],[],{xmlNamespace,[],[]},[],undefined,[],[{xmlText,[],undefined,[],[111,112,101,110],text}],[],[],undeclared},{xmlElement,roads,[],[],{xmlNamespace,[],[]},[],undefined,[],[{xmlText,[],undefined,[],[111,112,101,110],text}],[],[],undeclared},{xmlElement,harbor,[],[],{xmlNamespace,[],[]},[],undefined,[],[{xmlText,[],undefined,[],[117,110,100,101,102,105,110,101,100],text}],[],[],undeclared},{xmlElement,connections,[],[],{xmlNamespace,[],[]},[],undefined,[],[],[],[],undeclared},{xmlElement,coordinate,[],[],{xmlNamespace,[],[]},[],undefined,[],[{xmlElement,latitude,[],[],{xmlNamespace,[],[]},[],undefined,[],[{xmlText,[],undefined,[],[52,46,57,52,54,48,57,57,57,57,57,57,57,57,57,57,57,56,53,50,50,49,101,43,48,49],text}],[],[],undeclared},{xmlElement,longitude,[],[],{xmlNamespace,[],[]},[],undefined,[],[{xmlText,[],undefined,[],[49,46,49,48,54,49,57,57,57,57,57,57,57,57,57,57,57,57,51,56,56,57,101,43,48,49],text}],[],[],undeclared}],[],[],undeclared}],[],[],undeclared}},{{xmlElement,player,[],[],{xmlNamespace,[],[]},[],undefined,[],[{xmlElement,name,[],[],{xmlNamespace,[],[]},[],undefined,[],[{xmlText,[],undefined,[],[100,97,110,105,101,108],text}],[],[],undeclared},{xmlElement,character,[],[],{xmlNamespace,[],[]},[],undefined,[],[{xmlText,[],undefined,[],[109,101,100,105,99],text}],[],[],undeclared},{xmlElement,level,[],[],{xmlNamespace,[],[]},[],undefined,[],[{xmlText,[],undefined,[],[51],text}],[],[],undeclared},{xmlElement,location,[],[],{xmlNamespace,[],[]},[],undefined,[],[{xmlElement,name,[],[],{xmlNamespace,[],[]},[],undefined,[],[{xmlText,[],undefined,[],[117,110,100,101,102,105,110,101,100],text}],[],[],undeclared},{xmlElement,latitude,[],[],{xmlNamespace,[],[]},[],undefined,[],[{xmlText,[],undefined,[],[52,46,57,52,54,50,48,48,48,48,48,48,48,48,48,48,48,51,50,57,54,57,101,43,48,49],text}],[],[],undeclared},{xmlElement,longitude,[],[],{xmlNamespace,[],[]},[],undefined,[],[{xmlText,[],undefined,[],[49,46,49,48,54,49,57,57,57,57,57,57,57,57,57,57,57,57,51,56,56,57,101,43,48,49],text}],[],[],undeclared}],[],[],undeclared},{xmlElement,coordinate,[],[],{xmlNamespace,[],[]},[],undefined,[],[{xmlElement,latitude,[],[],{xmlNamespace,[],[]},[],undefined,[],[{xmlText,[],undefined,[],[52,46,57,52,54,50,48,48,48,48,48,48,48,48,48,48,48,51,50,57,54,57,101,43,48,49],text}],[],[],undeclared},{xmlElement,longitude,[],[],{xmlNamespace,[],[]},[],undefined,[],[{xmlText,[],undefined,[],[49,46,49,48,54,49,57,57,57,57,57,57,57,57,57,57,57,57,51,56,56,57,101,43,48,49],text}],[],[],undeclared}],[],[],undeclared},{xmlElement,activity,[],[],{xmlNamespace,[],[]},[],undefined,[],[{xmlText,[],undefined,[],[117,110,100,101,102,105,110,101,100],text}],[],[],undeclared},{xmlElement,paused,[],[],{xmlNamespace,[],[]},[],undefined,[],[{xmlText,[],undefined,[],[116,114,117,101],text}],[],[],undeclared}],[],[],undeclared}}]}).
 -endif.
 
 -include("records.hrl").
@@ -662,23 +663,23 @@ try_save_all_processes_test() ->
   {ok,_} = player:start(PlayerState),
 
   world:pause(world, K),
-  Result  = town:paused(nuremberg),
-  Result2 = town:paused(munich),
-  PIDDaniel = whereis(daniel),
+  Result      = town:paused(nuremberg),
+  Result2     = town:paused(munich),
+  PIDDaniel   = whereis(daniel),
   ?assert( is_pid(PIDDaniel)),
-  Result3 = player:paused(daniel),
+  Result3     = player:paused(daniel),
   ?assert({Result, Result2} =:= {{paused},{paused}}),
   ?assert(Result3 =:= {paused}),
 
+  Reply = world:save(world, K),
+  Verify = ?TESTSAVE,
 
-
-  world:save(world, K),
-  
   town:stop(munich),
   town:stop(nuremberg),
   player:stop(daniel),
   auth:stop(auth),
-  world:stop(world).
+  world:stop(world),
+  ?assert(Reply =:= Verify).
 
 -endif.
 

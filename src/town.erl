@@ -1340,7 +1340,6 @@ add_connection_test() ->
                                             ]},
   {ok,NewState} = town:state(munich,Token),
 
-  io:format("Distance: ~w ~n", [Distance]),
   ?assert(Distance =< 220),
   ?assert(Distance >= 100),
 
