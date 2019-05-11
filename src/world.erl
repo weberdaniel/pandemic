@@ -521,14 +521,14 @@ terminate(_,_)              -> {ok}.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%
-%% @doc handle DOWN messages. Whenever a process dies, that is monitored,
-%%      it will be removed from the ets.
-%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 -ifdef(TEST).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% @doc test if it is possible to add a PID and retrieve it afterwards
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 add_pid_and_retrieve_test() ->
   Map = ets:new(world,[public,set]),
@@ -543,15 +543,93 @@ add_pid_and_retrieve_test() ->
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
+%% @doc test if there is a help function
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+help_test() ->
+  world:help().
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% @doc test if there is a processes list
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+processes_test() ->
+  Map = ets:new(world,[public,set]),
+  {ok, _} = world:start(Map),
+  {ok, _} = auth:start("../auth_testfile3"),
+  {ok,K}  = auth:login(auth,"Daniel","blabla"),
+
+    StateNuremberg = 
+    #townstate{ name          = "nuremberg",
+                coordinate    = #coords
+                { 
+                  latitude  = 49.461,
+                  longitude = 11.062
+                },
+                population    = 1300000,
+                connections   = [],
+                birthrate     = 20.0,
+                infectionrate = 5.0,
+                lethality     = 30.0,
+                travelrate    = 400,
+                airport       = open,
+                roads         = open,
+                players       = []
+              },
+
+  StateMunich = 
+  #townstate{ name            = "munich",
+              coordinate      = #coords
+              { 
+                latitude  = 48.144,
+                longitude = 11.558
+              },
+              population      = 1300000,
+              birthrate       = 20.0,
+              infectionrate   = 5.0,
+              lethality       = 30.0,
+              travelrate      = 400,
+              connections     = [],
+              airport         = open,
+              roads           = open,
+              players         = []
+            },
+
+  {ok,PidMunich} = town:start(StateMunich),
+  {ok,PidNuremberg} = town:start(StateNuremberg),
+
+  Result = world:processes(world),
+  world:stop(world),
+  auth:stop(auth),
+  town:stop(nuremberg),
+  town:stop(munich),
+
+  [[LatM, LongM, NameM, TypeM, PidM], [LatN,LongN, NameN, TypeN, PidN ]] 
+  = Result,
+  
+
+  ?assert( LatM  =:= 48.144),
+  ?assert( LongM =:= 11.558),
+  ?assert( LatN  =:= 49.461),
+  ?assert( LongN =:= 11.062),
+  ?assert( NameM =:= "munich"),
+  ?assert( NameN =:= "nuremberg"),
+  ?assert( TypeM =:= town ),
+  ?assert( TypeN =:= town ),
+  ?assert( PidMunich =:= PidM  ),
+  ?assert( PidNuremberg =:= PidN).
+	
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
 %% @doc test if all registered processes are paused after the world server
 %%      has send "pause" messages to each of the registered processes. This
 %%      is necessary to pause all processes and afterwards create a consistent
 %%      save file.
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-help_test() ->
-  world:help().
 
 pause_all_registered_processes_test() ->
   Map = ets:new(world,[public,set]),
