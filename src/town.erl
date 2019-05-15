@@ -672,7 +672,7 @@ when is_record(_OldState, townstate),
             true  -> {reply, {paused}, _OldState};
             false ->  
               case is_player_registered(_Player,_OldState) of
-                true ->  {ok, { travel_started}, _OldState};
+                true -> {ok, {travel_started}, _OldState};
                 false -> {reply, {player_not_in_town}, _OldState}
               end
           end;
@@ -1084,10 +1084,10 @@ begin_test() ->
   {Coords} = town:coordinates(blubber),
   Expect = #coords{ latitude = 48.144, 
 	            longitude = 11.558 },
-  ?assert( Coords =:= Expect ),
-  ?assert( Result =:= ok),
   world:stop(world),
-  town:stop(blubber).
+  town:stop(blubber),
+  ?assert( Coords =:= Expect ),
+  ?assert( Result =:= ok).
 
 retrieve_state_test() ->
   Map = ets:new(world,[public,set]),
@@ -1167,6 +1167,10 @@ add_player_test() ->
   {ok,State2} = town:state(munich,Token),
 
 
+
+  world:stop(world),
+  town:stop(munich),
+  auth:stop(auth),
   ?assert(State2#townstate.name          =:= StateMunich#townstate.name),
   ?assert(State2#townstate.coordinate    =:= StateMunich#townstate.coordinate),
   ?assert(State2#townstate.birthrate     =:= StateMunich#townstate.birthrate),
@@ -1177,11 +1181,7 @@ add_player_test() ->
   ?assert(State2#townstate.airport       =:= StateMunich#townstate.airport ),
   ?assert(State2#townstate.roads         =:= StateMunich#townstate.roads ),
   ?assert(State2#townstate.paused        =:= StateMunich#townstate.paused ),
-  ?assert(State2#townstate.players       =:= [#playerid{name = "Horst"}]),
-
-  world:stop(world),
-  town:stop(munich),
-  auth:stop(auth).
+  ?assert(State2#townstate.players       =:= [#playerid{name = "Horst"}]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
@@ -1222,6 +1222,15 @@ add_and_remove_player_test() ->
   town:join(munich, "Horst" ,Token),
   {ok,State2}     = town:state(munich,Token),
 
+
+
+  town:leave(munich, "Horst", Token),
+  {ok,State3} = town:state(munich,Token),
+
+  world:stop(world),
+  town:stop(munich),
+  auth:stop(auth),
+
   ?assert(State2#townstate.name          =:= StateMunich#townstate.name),
   ?assert(State2#townstate.coordinate    =:= StateMunich#townstate.coordinate),
   ?assert(State2#townstate.birthrate     =:= StateMunich#townstate.birthrate),
@@ -1235,10 +1244,6 @@ add_and_remove_player_test() ->
   ?assert(State2#townstate.paused        =:= StateMunich#townstate.paused ),
   ?assert(State2#townstate.players       =:=  [#playerid{name = "Horst"}]),
 
-
-  town:leave(munich, "Horst", Token),
-  {ok,State3} = town:state(munich,Token),
-
   ?assert(State3#townstate.name          =:= StateMunich#townstate.name),
   ?assert(State3#townstate.coordinate    =:= StateMunich#townstate.coordinate),
   ?assert(State3#townstate.birthrate     =:= StateMunich#townstate.birthrate),
@@ -1250,11 +1255,7 @@ add_and_remove_player_test() ->
   ?assert(State3#townstate.airport       =:= StateMunich#townstate.airport ),
   ?assert(State3#townstate.roads         =:= StateMunich#townstate.roads ),
   ?assert(State3#townstate.paused        =:= StateMunich#townstate.paused ),
-  ?assert(State3#townstate.players       =:=  []),
-
-  world:stop(world),
-  town:stop(munich),
-  auth:stop(auth).
+  ?assert(State3#townstate.players       =:=  []).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
@@ -1329,6 +1330,7 @@ add_connection_test() ->
                                                   to = Loc,
                                                   distanceKm = Distance}
                                             ]},
+
   NewState2 = State#townstate{ connections = [#roadcon{ 
                                                   from = Loc2,
                                                   to = Loc,
@@ -1340,18 +1342,18 @@ add_connection_test() ->
                                             ]},
   {ok,NewState} = town:state(munich,Token),
 
-  ?assert(Distance =< 220),
-  ?assert(Distance >= 100),
 
   town:disconnect(munich, Loc, air, Token),
 
   {ok,Comparison} = town:state(munich,Token),
-  ?assert(NewState2#townstate.connections =:= Comparison#townstate.connections),
 
   world:stop(world),
   town:stop(munich),
   town:stop(nuremberg),
-  auth:stop(auth).
+  auth:stop(auth),
+  ?assert(NewState2#townstate.connections =:= Comparison#townstate.connections),
+  ?assert(Distance =< 220),
+  ?assert(Distance >= 100).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
@@ -1465,10 +1467,10 @@ population_test() ->
             },
   {ok,PID}         = town:start(StateMunich),
   {Number} = town:population(PID),
-  ?assert( Number =:= 1300000 ),
   world:stop(world),
   town:stop(munich),
-  auth:stop(auth).
+  auth:stop(auth),
+  ?assert( Number =:= 1300000 ).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
@@ -1511,11 +1513,11 @@ heal_test() ->
   {ok, PlayerPid}        = player:start(PlayerState),
   {ok}           = player:join( daniel, munich, town, Token ),
   Result = player:heal(PlayerPid, Token),
-  ?assert( Result =:= {3} ),
   world:stop(world),
   town:stop(munich),
   auth:stop(auth),
-  player:stop(daniel).
+  player:stop(daniel),
+  ?assert( Result =:= {3} ).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
@@ -1558,11 +1560,11 @@ heal_wrong_character_test() ->
   {ok, PlayerPid} = player:start(PlayerState),
   {ok}            = player:join( daniel, munich, town, Token ),
   Result          = player:heal(PlayerPid, Token),
-  ?assert( Result =:= {wrong_character} ),
   world:stop(world),
   town:stop(munich),
   auth:stop(auth),
-  player:stop(daniel).
+  player:stop(daniel),
+  ?assert( Result =:= {wrong_character} ).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
@@ -1609,10 +1611,10 @@ decreasing_population_test() ->
 	      2 * 100
 	     ),
   {ok,NewState}         = town:state(munich, Token),
-  ?assert(NewState#townstate.population < 1000 ),
   world:stop(world),
   town:stop(munich),
-  auth:stop(auth)
+  auth:stop(auth),
+  ?assert(NewState#townstate.population < 1000 )
   end}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -541,11 +541,10 @@ when is_record(_State,playerstate), is_list(_AdminToken) ->
 
 handle_call({travel,_From, _To, _Transport, _Token},_From,_State) 
 when is_record(_State,playerstate),
-     is_record(_From, location),
-     is_record(_To,   location),
-     is_atom(_Transport),
-     is_list(_Token) ->
-
+     is_record(_From ,location),
+     is_record(_To   ,location),
+     is_atom  (_Transport),
+     is_list  (_Token) ->
   {reply,{ok},_State};
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

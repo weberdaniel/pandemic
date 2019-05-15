@@ -427,11 +427,13 @@ course_coords_test() ->
   Valparaiso = #coords{ latitude = -33 , longitude = -71.6 },
   Shanghai   = #coords{ latitude = 31.4, longitude = 121.8 },
 
-  {-166.60000000000002,
+  R = course(Valparaiso, Shanghai),
+
+  ?assert({-166.60000000000002,
    -94.41302236945862,
    -78.42236042001993,
    168.5567762850174,
-   18742.658374455805} = course(Valparaiso, Shanghai).
+   18742.658374455805} =:= R).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
@@ -472,11 +474,14 @@ course_location_test() ->
   Valparaiso = #location{ latitude = -33 , longitude = -71.6 },
   Shanghai   = #location{ latitude = 31.4, longitude = 121.8 },
 
+  Result = course(Valparaiso, Shanghai),
+
+  ?assert(
   {-166.60000000000002,
    -94.41302236945862,
    -78.42236042001993,
    168.5567762850174,
-   18742.658374455805} = course(Valparaiso, Shanghai).
+   18742.658374455805} =:= Result ). 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
@@ -488,8 +493,8 @@ great_cricle_midpoint_test() ->
 
   Valparaiso = #coords{ latitude = -33 , longitude = -71.6 },
   Shanghai   = #coords{ latitude = 31.4, longitude = 121.8 },
-
-  { 
+  Result = great_circle_midpoint(Valparaiso, Shanghai),
+  ?assert({ 
     -166.60000000000002,
     -94.41302236945862,
     -56.73934232551105,
@@ -500,7 +505,7 @@ great_cricle_midpoint_test() ->
     -12.478849645454861,
     -6.806024577533078,
     -159.18082868525363
-  } = great_circle_midpoint(Valparaiso, Shanghai).
+  } =:= Result).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
@@ -514,9 +519,8 @@ great_cricle_waypoint_test() ->
 
   Valparaiso = #coords{ latitude = -33 , longitude = -71.6 },
   Shanghai   = #coords{ latitude = 31.4, longitude = 121.8 },
-
-  { -6.805196138288599,
-    -159.18213148936573 } = great_circle_waypoint(Valparaiso, Shanghai, 18743.0/2.0).
+  Result     = great_circle_waypoint(Valparaiso, Shanghai, 18743.0/2.0),
+  ?assert(Result =:= { -6.805196138288599, -159.18213148936573 }).
 
 -endif.
 
