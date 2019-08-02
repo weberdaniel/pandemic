@@ -34,7 +34,7 @@
 -export([start_link/7, start_link/1, start/7, start/1, terminate/2, pause/2, 
 	 help/0, init/1, handle_info/2, handle_cast/2, handle_call/3,
          code_change/3, resume/2, latitude/1, longitude/1, 
-         stop/1, save/2, addpassengers/3, passengers/1 ]).  
+         stop/1, save/2, add_npcs/3, npcs/1, target/1, target/2 ]).  
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
@@ -76,12 +76,30 @@ latitude( _PID )  ->
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
+%% @doc Set the target to where the vehicle shall travel
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+target( _PID, _Location ) when is_record(_Location, location) ->
+  gen_server:call(_PID, {set_target, _Location}).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% @doc Set the target to where the vehicle shall travel
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+target( _PID ) ->
+  gen_server:call(_PID, {get_target }).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
 %% @doc get passengers of the vehicle. Return {Total, Infected}
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-passengers( _PID )  ->
-  gen_server:call(_PID, {passengers}).
+npcs( _PID )  ->
+  gen_server:call(_PID, {npcs}).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
@@ -98,9 +116,9 @@ longitude( _PID )  ->
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-addpassengers( _PID, _Total, _Infected ) when is_number(_Total), 
+add_npcs( _PID, _Total, _Infected ) when is_number(_Total), 
 					      is_number(_Infected) ->
-  gen_server:call( _PID, {addpassengers, _Total, _Infected} ).
+  gen_server:call( _PID, {add_npcs, _Total, _Infected} ).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
@@ -368,12 +386,35 @@ handle_call({latitude},_From,_State) when is_record(_State, vehiclestate) ->
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
+%% @doc return latitude of vehicle
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+handle_call({set_target, _Location},_From,_State) when is_record(_State, vehiclestate),
+						       is_record(_Location, location) -> 
+  NewState = update(_State),
+  % TODO: Implement verification of location
+  NState = NewState#vehiclestate{ target = _Location },
+  {reply,{ok},NState};
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% @doc return latitude of vehicle
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+handle_call({get_target},_From,_State) when is_record(_State, vehiclestate) -> 
+  NewState = update(_State),
+  {reply,_State#vehiclestate.target,NewState};
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
 %% @doc return the number of total passengers as well as the number of
 %%      infected passengers
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-handle_call({passengers},_From,_State) when is_record(_State, vehiclestate) -> 
+handle_call({npcs},_From,_State) when is_record(_State, vehiclestate) -> 
   NewState = update(_State),
   {reply,{_State#vehiclestate.passengers, 
 	  _State#vehiclestate.infectedpassengers},  NewState};
@@ -406,7 +447,7 @@ handle_call({is_paused},_From,_State) when is_record(_State, vehiclestate) ->
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-handle_call({addpassengers,_Total,_Infected},_From,_State)
+handle_call({add_npcs,_Total,_Infected},_From,_State)
   when is_record(_State, vehiclestate), is_integer(_Total), 
        is_integer(_Infected) -> 
 
@@ -516,8 +557,8 @@ addpassenger_test() ->
 		 infectedpassengers = 0
 	       },
   {ok, PID} = vehicle:start(V),
-  {ok} = vehicle:addpassengers(PID, 100, 10),
-  {300,10} = vehicle:passengers(PID),
+  {ok}      = vehicle:add_npcs(PID, 100, 10),
+  {300,10}  = vehicle:npcs(PID),
   vehicle:stop(PID).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -549,8 +590,36 @@ travelvehicle_test() ->
 		 infectedpassengers = 0
 	       },
   {ok, PID} = vehicle:start(V),
-  {ok} = vehicle:addpassengers(PID, 100, 10),
-  {300,10} = vehicle:passengers(PID),
+  {ok} = vehicle:add_npcs(PID, 100, 10),
+  {300,10} = vehicle:npcs(PID),
+  vehicle:stop(PID).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% @doc test if the vehicle does travel
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+settarget_test() ->
+  V = 
+  #vehiclestate{ 
+                 id         = "B50" ,
+	         coordinate = #coords{ latitude = 22, longitude = 33},
+	         location   = [], 
+	         paused     = false ,
+		 type       = aircraft,
+		 speedKmH   = 40,
+		 passengers = 200,
+		 activity   = halted,
+		 infectedpassengers = 0
+	       },
+  {ok, PID} = vehicle:start(V),
+  {ok} = vehicle:add_npcs(PID, 100, 10),
+  A = #location{ name = "bla", latitude = 33.33, longitude=44.00 },
+  {ok} = vehicle:target(PID, A),
+  B = vehicle:target(PID),
+  ?assert( A =:= B ),
+  {300,10} = vehicle:npcs(PID),
   vehicle:stop(PID).
 
 -endif.
