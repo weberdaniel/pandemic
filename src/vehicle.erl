@@ -34,7 +34,8 @@
 -export([start_link/7, start_link/1, start/7, start/1, terminate/2, pause/2, 
 	 help/0, init/1, handle_info/2, handle_cast/2, handle_call/3,
          code_change/3, resume/2, latitude/1, longitude/1, 
-         stop/1, save/2, add_npcs/3, npcs/1, target/1, target/2 ]).  
+         stop/1, save/2, add_npcs/3, npcs/1, target/1, target/2,
+         start_travel/1, travel/1, pause_travel/1 ]).  
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
@@ -76,6 +77,15 @@ latitude( _PID )  ->
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
+%% @doc get state of travel: halt or travel
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+travel( _PID )  ->
+  gen_server:call(_PID, {travel}).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
 %% @doc Set the target to where the vehicle shall travel
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -91,6 +101,24 @@ target( _PID, _Location ) when is_record(_Location, location) ->
 %
 target( _PID ) ->
   gen_server:call(_PID, {get_target }).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% @doc Start the travel
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+start_travel( _PID ) ->
+  gen_server:call(_PID, {start_travel}).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% @doc Pause the travel
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+pause_travel( _PID ) ->
+  gen_server:call(_PID, {pause_travel}).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
@@ -180,9 +208,24 @@ help( ) ->
 update( _State ) when is_record( _State, vehiclestate)  ->
   Target             = _State#vehiclestate.target,
 
+  % only travel if not paused
+
+  case is_paused(_State) of
+    true ->
+      CurrentTimeNative  = erlang:monotonic_time(),
+      CurrentTimeSec     = erlang:convert_time_unit(CurrentTimeNative, 
+                           native, seconds),
+      _State#vehiclestate{ coordinateTimeSec = CurrentTimeSec};
+    _ -> 
+
   % only travel if the activity is not set to halted
+
   case _State#vehiclestate.activity of
-    halted -> _State;
+    halted -> 
+      CurrentTimeNative  = erlang:monotonic_time(),
+      CurrentTimeSec     = erlang:convert_time_unit(CurrentTimeNative, 
+                           native, seconds),
+      _State#vehiclestate{ coordinateTimeSec = CurrentTimeSec};
     _ ->
 
   % only travel if a Target exists
@@ -213,6 +256,7 @@ update( _State ) when is_record( _State, vehiclestate)  ->
                   end;
 		_ -> _State
               end
+  end
   end
   end.
 
@@ -376,6 +420,47 @@ init([_Vehiclestate]) when is_record(_Vehiclestate, vehiclestate) ->
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
+%% @doc start_travel
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+handle_call({travel},_From,_State) when is_record(_State, vehiclestate) -> 
+  case is_paused(_State) of
+    true  -> {reply, {paused}, _State};
+    _     -> NewState = update(_State),
+             {reply,{NewState#vehiclestate.activity},NewState}
+  end;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% @doc start_travel
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+handle_call({start_travel},_From,_State) when is_record(_State, vehiclestate) -> 
+  case is_paused(_State) of
+    true -> {reply, {paused}, _State};
+    _    -> S2 = _State#vehiclestate{ activity =  travel},
+            NewState = update(S2),
+            {reply,{ok},NewState}
+  end;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% @doc start_travel
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+handle_call({pause_travel},_From,_State) when is_record(_State, vehiclestate) -> 
+  case is_paused(_State) of
+    true -> {reply, {paused}, _State};
+    _    -> S2 = _State#vehiclestate{ activity =  halt},
+            NewState = update(S2),
+            {reply,{_State#vehiclestate.coordinate#coords.latitude},  NewState}
+  end;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
 %% @doc return latitude of vehicle
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -392,10 +477,13 @@ handle_call({latitude},_From,_State) when is_record(_State, vehiclestate) ->
 
 handle_call({set_target, _Location},_From,_State) when is_record(_State, vehiclestate),
 						       is_record(_Location, location) -> 
-  NewState = update(_State),
-  % TODO: Implement verification of location
-  NState = NewState#vehiclestate{ target = _Location },
-  {reply,{ok},NState};
+  case is_paused(_State) of
+    true -> {reply, {paused}, _State};
+    _    ->  NewState = update(_State),
+             % TODO: Implement verification of location
+             NState = NewState#vehiclestate{ target = _Location },
+             {reply,{ok},NState}
+  end;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
